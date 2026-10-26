@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HRD Training Budget Planner</title>
+
+<!-- SheetJS for Excel Export -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    background: #f0f4f8;
+    color: #333;
+    padding: 20px;
+    line-height: 1.5;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.header {
+    background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
+    color: white;
+    padding: 24px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(13,71,161,0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.header h1 {
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.header .subtitle {
+    font-size: 14px;
+    opacity: 0.85;
+}
+
+.card {
+    background: white;
+    padding: 24px;
+    margin-bottom: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    border: 1px solid #e1e8ed;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eef2f6;
+}
+
+h2 {
+    font-size: 18px;
+    color: #0d47a1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    color: #455a64;
+}
+
+input[type="text"],
+input[type="number"],
+select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cfd8dc;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: #fafafa;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus {
+    border-color: #1976d2;
+    box-shadow: 0 0 0 3px rgba(25,118,210,0.15);
+    outline: none;
+    background: #fff;
+}
+
+input[readonly] {
+    background-color: #f1f5f9;
+    color: #475569;
+    font-weight: 600;
+}
+
+/* Checkbox Styling */
+.checkbox-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 14px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #334155;
+    user-select: none;
+    background: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    transition: all 0.2s;
+}
+
+.checkbox-label:hover {
+    border-color: #1976d2;
+    background: #f0f7ff;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    accent-color: #1976d2;
+    cursor: pointer;
+}
+
+/* Venue Block Cards */
+.venue-card {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-left: 5px solid #1976d2;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    position: relative;
+    transition: shadow 0.2s;
+}
+
+.venue-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.venue-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.venue-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.btn-secondary {
+    background: #0284c7;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #0369a1;
+}
+
+.btn-excel {
+    background: #16a34a;
+    color: white;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(22,163,74,0.3);
+    transition: all 0.2s;
+}
+
+.btn-excel:hover {
+    background: #15803d;
+    transform: translateY(-1px);
+}
+
+/* Summary Grid Cards */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 24px;
+}
+
+.summary-card {
+    background: white;
+    padding: 18px;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
+
+.summary-card h3 {
+    font-size: 13px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.summary-card .value {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+/* Budget Table Breakdown */
+.table-responsive {
+    overflow-x: auto;
+    margin-top: 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    text-align: left;
+}
+
+th {
+    background: #f1f5f9;
+    color: #334155;
+    padding: 12px 16px;
+    font-weight: 700;
+    border-bottom: 2px solid #cbd5e1;
+}
+
+td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+}
+
+tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* Grand Total Box */
+.total-box {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: white;
+    padding: 24px;
+    border-radius: 12px;
+    margin-top: 24px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 16px;
+}
+
+.total-row.grand-total {
+    font-size: 22px;
+    font-weight: 800;
+    border-top: 1px solid #334155;
+    border-bottom: 1px solid #334155;
+    padding: 16px 0;
+    margin: 12px 0;
+    color: #38bdf8;
+}
+
+.green-text {
+    color: #4ade80;
+    font-weight: bold;
+}
+
+.red-text {
+    color: #f87171;
+    font-weight: bold;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- App Header -->
+    <div class="header">
+        <div>
+            <h1>HRD Training Budget Planner</h1>
+            <div class="subtitle">Multi-Venue & Dynamic Logistics Costing System</div>
+        </div>
+        <button class="btn-excel" onclick="exportToExcel()">
+            📊 Export Formatted Excel (.xlsx)
+        </button>
+    </div>
+
+    <!-- Global General Details -->
+    <div class="card">
+        <div class="card-header">
+            <h2>📋 General Training Information</h2>
+        </div>
+        <div class="grid">
+            <div class="form-group">
+                <label>Activity / Training Title</label>
+                <input type="text" id="activityTitle" value="HRD Capability Building Program" oninput="computeBudget()">
+            </div>
+            <div class="form-group">
+                <label>Approved Fund Allocation (₱)</label>
+                <input type="number" id="fund" value="500000" oninput="computeBudget()">
+            </div>
+            <div class="form-group">
+                <label>Number of Participants (Pax)</label>
+                <input type="number" id="participants" value="50" oninput="computeBudget()">
+            </div>
+            <div class="form-group">
+                <label>Default PMT Count (Pax)</label>
+                <input type="number" id="defaultPmt" value="20" oninput="updateAllVenuePMTs()">
+            </div>
+        </div>
+    </div>
+
+    <!-- Training Materials Section -->
+    <div class="card">
+        <div class="card-header">
+            <h2>📚 Training Materials & Supplies</h2>
+        </div>
+        <div class="grid">
+            <div class="form-group">
+                <label>Materials Cost Per Participant (₱)</label>
+                <input type="number" id="materialsRate" value="250" oninput="computeBudget()">
+            </div>
+            <div class="form-group">
+                <label>Total Materials Cost (Computed)</label>
+                <input type="text" id="materialsComputed" readonly value="₱0.00">
+            </div>
+        </div>
+    </div>
+
+    <!-- Venues & Schedules Container -->
+    <div class="card">
+        <div class="card-header">
+            <h2>📍 Venue Schedules & Logistics</h2>
+            <button class="btn-secondary" onclick="addVenue()">+ Add Another Venue</button>
+        </div>
+        
+        <div id="venuesContainer">
+            <!-- Venue Cards dynamic injection -->
+        </div>
+    </div>
+
+    <!-- Medicine & Contingency Section -->
+    <div class="card">
+        <div class="card-header">
+            <h2>🩹 Medicine & Contingency Allocation</h2>
+        </div>
+        <div class="grid">
+            <div class="form-group">
+                <label>Medicine Budget Allocation (₱)</label>
+                <input type="number" id="medicine" value="0" oninput="computeBudget()">
+            </div>
+            <div class="form-group">
+                <label>Contingency Budget Allocation (₱)</label>
+                <input type="number" id="contingency" value="0" oninput="computeBudget()">
+            </div>
+        </div>
+    </div>
+
+    <!-- Overall Summary Indicators -->
+    <div class="summary-grid">
+        <div class="summary-card">
+            <h3>Peak Total Pax</h3>
+            <div class="value" id="summaryPax">0</div>
+        </div>
+        <div class="summary-card">
+            <h3>Total Board & Lodging</h3>
+            <div class="value" id="summaryLodging">₱0.00</div>
+        </div>
+        <div class="summary-card">
+            <h3>Total Food Meals</h3>
+            <div class="value" id="summaryFood">₱0.00</div>
+        </div>
+        <div class="summary-card">
+            <h3>Total Van Hire</h3>
+            <div class="value" id="summaryVan">₱0.00</div>
+        </div>
+        <div class="summary-card">
+            <h3>Peak Vans Needed</h3>
+            <div class="value" id="summaryVanCount">0</div>
+        </div>
+    </div>
+
+    <!-- Budget Breakdown Table -->
+    <div class="card">
+        <div class="card-header">
+            <h2>📑 Itemized Budget Breakdown</h2>
+        </div>
+        <div class="table-responsive">
+            <table id="breakdownTable">
+                <thead>
+                    <tr>
+                        <th>Item Description</th>
+                        <th class="text-center">Unit</th>
+                        <th class="text-center">Quantity</th>
+                        <th class="text-right">Unit Rate / Cost (₱)</th>
+                        <th class="text-right">Total Cost (₱)</th>
+                    </tr>
+                </thead>
+                <tbody id="breakdownBody">
+                    <!-- Dynamic rows inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Total Summary & Balance Box -->
+    <div class="total-box">
+        <div class="total-row">
+            <span>Approved Fund Allocation:</span>
+            <span id="boxFund">₱0.00</span>
+        </div>
+        <div class="total-row grand-total">
+            <span>GRAND TOTAL BUDGET REQUIRED:</span>
+            <span id="boxGrandTotal">₱0.00</span>
+        </div>
+        <div class="total-row">
+            <span>Remaining Fund Balance:</span>
+            <span id="boxRemaining" class="green-text">₱0.00</span>
+        </div>
+        <div class="total-row">
+            <span>Budget Utilization Rate:</span>
+            <span id="boxUtilization" class="green-text">0.00%</span>
+        </div>
+    </div>
+
+</div>
+
+<script>
+let venueCount = 0;
+
+function money(x) {
+    return Number(x).toLocaleString('en-PH', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+function addVenue(name = "", days = 3, pmtVal = null, lodgingRate = 2000, vanRate = 6500) {
+    venueCount++;
+    const venueId = venueCount;
+    const defaultPmt = pmtVal !== null ? pmtVal : (document.getElementById("defaultPmt")?.value || 20);
+
+    const venueHTML = `
+    <div class="venue-card" id="venueCard_${venueId}">
+        <div class="venue-header">
+            <div class="venue-title">Venue Location #${venueId}</div>
+            ${venueId > 1 ? `<button class="btn-danger" onclick="removeVenue(${venueId})">✕ Remove Venue</button>` : ''}
+        </div>
+        
+        <div class="grid">
+            <div class="form-group">
+                <label>Venue Name / Location</label>
+                <input type="text" id="venueName_${venueId}" value="${name || (venueId === 1 ? 'TBA Venue' : 'SDO Laguna')}" oninput="computeBudget()">
+            </div>
+            <div class="form-group">
+                <label>Duration at Venue (Days)</label>
+                <input type="number" id="venueDays_${venueId}" value="${days}" min="1" oninput="computeBudget()">
+            </div>
+            <div class="form-group">
+                <label>PMT assigned to Venue (Pax)</label>
+                <input type="number" id="venuePmt_${venueId}" value="${defaultPmt}" min="0" oninput="computeBudget()">
+            </div>
+        </div>
+
+        <div class="checkbox-card" style="margin-top:15px;">
+            <div class="grid">
+                <div class="form-group">
+                    <label class="checkbox-label" style="border:none; padding:0; background:none;">
+                        <input type="checkbox" id="hasLodging_${venueId}" ${venueId === 1 ? 'checked' : ''} onchange="toggleLodgingInput(${venueId}); computeBudget();">
+                        Requires Board & Lodging at this venue?
+                    </label>
+                </div>
+                <div class="form-group" id="lodgingRateGroup_${venueId}">
+                    <label>Board & Lodging Rate / Person / Day (₱)</label>
+                    <input type="number" id="lodgingRate_${venueId}" value="${lodgingRate}" oninput="computeBudget()">
+                </div>
+            </div>
+        </div>
+
+        <div class="checkbox-card">
+            <label style="margin-bottom:8px; display:block;">Meals Included at Venue:</label>
+            <div class="checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="breakfast_${venueId}" onchange="computeBudget()"> Breakfast (₱150)
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="amSnack_${venueId}" checked onchange="computeBudget()"> AM Snack (₱100)
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="lunch_${venueId}" checked onchange="computeBudget()"> Lunch (₱350)
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="pmSnack_${venueId}" checked onchange="computeBudget()"> PM Snack (₱100)
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="dinner_${venueId}" onchange="computeBudget()"> Dinner (₱350)
+                </label>
+            </div>
+        </div>
+
+        <div class="grid" style="margin-top:15px;">
+            <div class="form-group">
+                <label>Van Rental Rate / Van (₱)</label>
+                <input type="number" id="vanRate_${venueId}" value="${vanRate}" oninput="computeBudget()">
+            </div>
+            <div class="form-group">
+                <label>Total Round Trips (SDO ↔ Venue)</label>
+                <input type="text" id="vanTripsText_${venueId}" readonly value="2 Trips (1 Outbound, 1 Return)">
+            </div>
+            <div class="form-group">
+                <label>Vans Needed (Max 10 Pax/Van)</label>
+                <input type="text" id="vansNeeded_${venueId}" readonly value="0 Vans">
+            </div>
+        </div>
+    </div>
+    `;
+
+    document.getElementById("venuesContainer").insertAdjacentHTML("beforeend", venueHTML);
+    toggleLodgingInput(venueId);
+    computeBudget();
+}
+
+function toggleLodgingInput(venueId) {
+    const hasLodging = document.getElementById(`hasLodging_${venueId}`).checked;
+    const rateGroup = document.getElementById(`lodgingRateGroup_${venueId}`);
+    if (rateGroup) {
+        rateGroup.style.display = hasLodging ? "block" : "none";
+    }
+}
+
+function removeVenue(id) {
+    const card = document.getElementById(`venueCard_${id}`);
+    if (card) {
+        card.remove();
+        computeBudget();
+    }
+}
+
+function updateAllVenuePMTs() {
+    const globalPmt = parseInt(document.getElementById("defaultPmt").value) || 0;
+    const cards = document.querySelectorAll('.venue-card');
+    cards.forEach(card => {
+        const id = card.id.split('_')[1];
+        const pmtInput = document.getElementById(`venuePmt_${id}`);
+        if (pmtInput) pmtInput.value = globalPmt;
+    });
+    computeBudget();
+}
+
+function computeBudget() {
+    const participants = parseInt(document.getElementById("participants").value) || 0;
+    const fund = parseFloat(document.getElementById("fund").value) || 0;
+    const materialsRate = parseFloat(document.getElementById("materialsRate").value) || 0;
+
+    const materialsTotal = participants * materialsRate;
+    document.getElementById("materialsComputed").value = "₱" + money(materialsTotal);
+
+    let globalLodgingTotal = 0;
+    let globalFoodTotal = 0;
+    let globalVanTotal = 0;
+    let peakPax = 0;
+    let maxVansNeeded = 0;
+
+    const breakdownItems = [];
+
+    if (materialsTotal > 0) {
+        breakdownItems.push({
+            desc: "Training Materials Cost",
+            unit: "Pax",
+            qty: participants,
+            rate: materialsRate,
+            total: materialsTotal
+        });
+    }
+
+    const venueCards = document.querySelectorAll('.venue-card');
+    venueCards.forEach(card => {
+        const id = card.id.split('_')[1];
+        const venueName = document.getElementById(`venueName_${id}`).value || `Venue #${id}`;
+        const days = parseInt(document.getElementById(`venueDays_${id}`).value) || 0;
+        const venuePmt = parseInt(document.getElementById(`venuePmt_${id}`).value) || 0;
+        
+        const totalPaxVenue = participants + venuePmt;
+        if (totalPaxVenue > peakPax) peakPax = totalPaxVenue;
+
+        const hasLodging = document.getElementById(`hasLodging_${id}`).checked;
+        const lodgingRate = hasLodging ? (parseFloat(document.getElementById(`lodgingRate_${id}`).value) || 0) : 0;
+        const lodgingTotal = hasLodging ? (totalPaxVenue * lodgingRate * days) : 0;
+        globalLodgingTotal += lodgingTotal;
+
+        if (hasLodging && lodgingTotal > 0) {
+            breakdownItems.push({
+                desc: `Board & Lodging - ${venueName} (${days} Days)`,
+                unit: "Pax",
+                qty: totalPaxVenue,
+                rate: lodgingRate * days,
+                total: lodgingTotal
+            });
+        }
+
+        let dailyMealRatePerPax = 0;
+        if (document.getElementById(`breakfast_${id}`).checked) dailyMealRatePerPax += 150;
+        if (document.getElementById(`amSnack_${id}`).checked) dailyMealRatePerPax += 100;
+        if (document.getElementById(`lunch_${id}`).checked) dailyMealRatePerPax += 350;
+        if (document.getElementById(`pmSnack_${id}`).checked) dailyMealRatePerPax += 100;
+        if (document.getElementById(`dinner_${id}`).checked) dailyMealRatePerPax += 350;
+
+        const foodTotalVenue = dailyMealRatePerPax * totalPaxVenue * days;
+        globalFoodTotal += foodTotalVenue;
+
+        if (foodTotalVenue > 0) {
+            breakdownItems.push({
+                desc: `Food Expense - ${venueName} (${days} Days)`,
+                unit: "Pax",
+                qty: totalPaxVenue,
+                rate: dailyMealRatePerPax * days,
+                total: foodTotalVenue
+            });
+        }
+
+        const vanRate = parseFloat(document.getElementById(`vanRate_${id}`).value) || 0;
+        const totalRoundTrips = 2;
+        const vansNeeded = totalPaxVenue > 0 ? Math.ceil(totalPaxVenue / 10) : 0;
+        
+        if (vansNeeded > maxVansNeeded) maxVansNeeded = vansNeeded;
+
+        document.getElementById(`vansNeeded_${id}`).value = `${vansNeeded} Vans (${vansNeeded * totalRoundTrips} Trips Total)`;
+
+        const vanTotalVenue = vansNeeded * vanRate * totalRoundTrips;
+        globalVanTotal += vanTotalVenue;
+
+        if (vanTotalVenue > 0) {
+            breakdownItems.push({
+                desc: `Van Rental - ${venueName} (${vansNeeded} Vans, Round-Trip: SDO ↔ Venue)`,
+                unit: "Vans",
+                qty: vansNeeded,
+                rate: vanRate * totalRoundTrips,
+                total: vanTotalVenue
+            });
+        }
+    });
+
+    const medicine = parseFloat(document.getElementById("medicine").value) || 0;
+    const contingency = parseFloat(document.getElementById("contingency").value) || 0;
+
+    if (medicine > 0) {
+        breakdownItems.push({
+            desc: "Medicine Allocation",
+            unit: "Lot",
+            qty: 1,
+            rate: medicine,
+            total: medicine
+        });
+    }
+
+    if (contingency > 0) {
+        breakdownItems.push({
+            desc: "Contingency Allocation",
+            unit: "Lot",
+            qty: 1,
+            rate: contingency,
+            total: contingency
+        });
+    }
+
+    const grandTotal = materialsTotal + globalLodgingTotal + globalFoodTotal + globalVanTotal + medicine + contingency;
+    const remaining = fund - grandTotal;
+    const utilization = fund > 0 ? (grandTotal / fund) * 100 : 0;
+
+    document.getElementById("summaryPax").innerText = peakPax;
+    document.getElementById("summaryLodging").innerText = "₱" + money(globalLodgingTotal);
+    document.getElementById("summaryFood").innerText = "₱" + money(globalFoodTotal);
+    document.getElementById("summaryVan").innerText = "₱" + money(globalVanTotal);
+    document.getElementById("summaryVanCount").innerText = maxVansNeeded;
+
+    const tbody = document.getElementById("breakdownBody");
+    tbody.innerHTML = "";
+
+    if (breakdownItems.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center" style="color:#94a3b8; padding:20px;">No billable items selected.</td></tr>`;
+    } else {
+        breakdownItems.forEach(item => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><strong>${item.desc}</strong></td>
+                <td class="text-center">${item.unit}</td>
+                <td class="text-center">${item.qty}</td>
+                <td class="text-right">₱${money(item.rate)}</td>
+                <td class="text-right"><strong>₱${money(item.total)}</strong></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    document.getElementById("boxFund").innerText = "₱" + money(fund);
+    document.getElementById("boxGrandTotal").innerText = "₱" + money(grandTotal);
+    
+    const remainingEl = document.getElementById("boxRemaining");
+    remainingEl.innerText = "₱" + money(remaining);
+    remainingEl.className = remaining >= 0 ? "green-text" : "red-text";
+
+    const utilEl = document.getElementById("boxUtilization");
+    utilEl.innerText = utilization.toFixed(2) + "%";
+    utilEl.className = utilization <= 100 ? "green-text" : "red-text";
+}
+
+// ADVANCED FORMATTED EXCEL EXPORT
+function exportToExcel() {
+    const activityTitle = document.getElementById("activityTitle").value || "HRD Training Program";
+    const fund = parseFloat(document.getElementById("fund").value) || 0;
+    const participants = parseInt(document.getElementById("participants").value) || 0;
+    const defaultPmt = parseInt(document.getElementById("defaultPmt").value) || 0;
+    const today = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    // Build Formatted Array of Objects/Cells
+    const wsData = [
+        ["DEPARTMENT OF EDUCATION - SCHOOLS DIVISION OFFICE OF LAGUNA"],
+        ["HRD TRAINING BUDGET PLANNER & ITEMIZATION"],
+        [],
+        ["Activity Title:", activityTitle, "", "Date Generated:", today],
+        ["Participants (Pax):", participants, "", "Default PMT (Pax):", defaultPmt],
+        ["Fund Allocation:", fund, "", "Status:", "Official Proposal"],
+        [],
+        ["Item Description", "Unit", "Quantity", "Unit Rate / Cost", "Total Amount"]
+    ];
+
+    // Collect Rows
+    const rows = document.querySelectorAll("#breakdownBody tr");
+    let grandTotal = 0;
+
+    rows.forEach(row => {
+        const cells = row.querySelectorAll("td");
+        if (cells.length === 5) {
+            const desc = cells[0].innerText;
+            const unit = cells[1].innerText;
+            const qty = parseFloat(cells[2].innerText) || 0;
+            const rate = parseFloat(cells[3].innerText.replace(/[^0-9.-]+/g, "")) || 0;
+            const total = parseFloat(cells[4].innerText.replace(/[^0-9.-]+/g, "")) || 0;
+
+            grandTotal += total;
+            wsData.push([desc, unit, qty, rate, total]);
+        }
+    });
+
+    const remaining = fund - grandTotal;
+    const utilization = fund > 0 ? (grandTotal / fund) * 100 : 0;
+
+    // Append Summary Rows
+    wsData.push([]);
+    wsData.push(["GRAND TOTAL BUDGET REQUIRED", "", "", "", grandTotal]);
+    wsData.push(["APPROVED FUND ALLOCATION", "", "", "", fund]);
+    wsData.push(["REMAINING FUND BALANCE", "", "", "", remaining]);
+    wsData.push(["BUDGET UTILIZATION RATE", "", "", "", utilization / 100]);
+
+    // Create Worksheet
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Number Formatting Ranges (Currency & Percentages)
+    const currencyFmt = '"₱"#,##0.00;("₱"#,##0.00);"-"';
+    const percentFmt = '0.00%';
+    const numberFmt = '#,##0';
+
+    // Apply Formats Cell by Cell
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
+            if (!ws[cell_address]) continue;
+
+            // Header Metadata Currency
+            if ((R === 5 && C === 1) || (R >= 8 && C >= 3)) {
+                if (typeof ws[cell_address].v === 'number') {
+                    if (R === range.e.r && C === 4) {
+                        ws[cell_address].z = percentFmt;
+                    } else {
+                        ws[cell_address].z = currencyFmt;
+                    }
+                }
+            } else if (R >= 8 && C === 2 && typeof ws[cell_address].v === 'number') {
+                ws[cell_address].z = numberFmt;
+            }
+        }
+    }
+
+    // Set Column Widths for Optimal View
+    ws['!cols'] = [
+        { wch: 48 }, // Item Description
+        { wch: 12 }, // Unit
+        { wch: 12 }, // Quantity
+        { wch: 22 }, // Unit Rate
+        { wch: 24 }  // Total Amount
+    ];
+
+    // Page Setup for Printing (Fit to 1 Page Wide Landscape)
+    ws['!pageSetup'] = { orientation: 'landscape', fitToWidth: 1, fitToHeight: 0 };
+
+    // Create & Export Workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Budget Summary");
+
+    const fileName = `${activityTitle.replace(/[^a-zA-Z0-9]/g, "_")}_Budget_Planner.xlsx`;
+    XLSX.writeFile(wb, fileName);
+}
+
+window.onload = function() {
+    addVenue("Main Training Center", 3, 20, 2000, 6500);
+};
+</script>
+
+</body>
+</html>
