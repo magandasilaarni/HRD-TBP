@@ -1,901 +1,1253 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HRD Training Budget Planner</title>
-
-<!-- SheetJS for Excel Export -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-<style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-}
-
-body {
-    background: #f0f4f8;
-    color: #333;
-    padding: 20px;
-    line-height: 1.5;
-}
-
-.container {
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-.header {
-    background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
-    color: white;
-    padding: 24px;
-    border-radius: 12px;
-    margin-bottom: 24px;
-    box-shadow: 0 4px 12px rgba(13,71,161,0.2);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.header h1 {
-    font-size: 26px;
-    font-weight: 700;
-}
-
-.header .subtitle {
-    font-size: 14px;
-    opacity: 0.85;
-}
-
-.card {
-    background: white;
-    padding: 24px;
-    margin-bottom: 24px;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-    border: 1px solid #e1e8ed;
-}
-
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 18px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #eef2f6;
-}
-
-h2 {
-    font-size: 18px;
-    color: #0d47a1;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 18px;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-}
-
-label {
-    margin-bottom: 6px;
-    font-weight: 600;
-    font-size: 13px;
-    color: #455a64;
-}
-
-input[type="text"],
-input[type="number"],
-select {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #cfd8dc;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    background: #fafafa;
-}
-
-input[type="text"]:focus,
-input[type="number"]:focus,
-select:focus {
-    border-color: #1976d2;
-    box-shadow: 0 0 0 3px rgba(25,118,210,0.15);
-    outline: none;
-    background: #fff;
-}
-
-input[readonly] {
-    background-color: #f1f5f9;
-    color: #475569;
-    font-weight: 600;
-}
-
-/* Checkbox Styling */
-.checkbox-card {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    padding: 14px;
-    border-radius: 8px;
-    margin-top: 10px;
-}
-
-.checkbox-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.checkbox-label {
-    display: inline-flex;
-    align-items: center;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    color: #334155;
-    user-select: none;
-    background: white;
-    padding: 8px 14px;
-    border-radius: 6px;
-    border: 1px solid #cbd5e1;
-    transition: all 0.2s;
-}
-
-.checkbox-label:hover {
-    border-color: #1976d2;
-    background: #f0f7ff;
-}
-
-.checkbox-label input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    margin-right: 8px;
-    accent-color: #1976d2;
-    cursor: pointer;
-}
-
-/* Venue Block Cards */
-.venue-card {
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-left: 5px solid #1976d2;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    position: relative;
-    transition: shadow 0.2s;
-}
-
-.venue-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-.venue-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.venue-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: #1e293b;
-}
-
-.btn-danger {
-    background: #ef4444;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    transition: background 0.2s;
-}
-
-.btn-danger:hover {
-    background: #dc2626;
-}
-
-.btn-secondary {
-    background: #0284c7;
-    color: white;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: background 0.2s;
-}
-
-.btn-secondary:hover {
-    background: #0369a1;
-}
-
-.btn-excel {
-    background: #16a34a;
-    color: white;
-    border: none;
-    padding: 12px 22px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 15px;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 2px 8px rgba(22,163,74,0.3);
-    transition: all 0.2s;
-}
-
-.btn-excel:hover {
-    background: #15803d;
-    transform: translateY(-1px);
-}
-
-/* Summary Grid Cards */
-.summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 24px;
-}
-
-.summary-card {
-    background: white;
-    padding: 18px;
-    border-radius: 10px;
-    text-align: center;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
-}
-
-.summary-card h3 {
-    font-size: 13px;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
-}
-
-.summary-card .value {
-    font-size: 24px;
-    font-weight: 800;
-    color: #0f172a;
-}
-
-/* Budget Table Breakdown */
-.table-responsive {
-    overflow-x: auto;
-    margin-top: 15px;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-    text-align: left;
-}
-
-th {
-    background: #f1f5f9;
-    color: #334155;
-    padding: 12px 16px;
-    font-weight: 700;
-    border-bottom: 2px solid #cbd5e1;
-}
-
-td {
-    padding: 12px 16px;
-    border-bottom: 1px solid #e2e8f0;
-    color: #334155;
-}
-
-tr:nth-child(even) {
-    background-color: #f8fafc;
-}
-
-.text-right {
-    text-align: right;
-}
-
-.text-center {
-    text-align: center;
-}
-
-/* Grand Total Box */
-.total-box {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    color: white;
-    padding: 24px;
-    border-radius: 12px;
-    margin-top: 24px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-}
-
-.total-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    font-size: 16px;
-}
-
-.total-row.grand-total {
-    font-size: 22px;
-    font-weight: 800;
-    border-top: 1px solid #334155;
-    border-bottom: 1px solid #334155;
-    padding: 16px 0;
-    margin: 12px 0;
-    color: #38bdf8;
-}
-
-.green-text {
-    color: #4ade80;
-    font-weight: bold;
-}
-
-.red-text {
-    color: #f87171;
-    font-weight: bold;
-}
-</style>
-</head>
-<body>
-
-<div class="container">
-
-    <!-- App Header -->
-    <div class="header">
-        <div>
-            <h1>HRD Training Budget Planner</h1>
-            <div class="subtitle">Multi-Venue & Dynamic Logistics Costing System</div>
-        </div>
-        <button class="btn-excel" onclick="exportToExcel()">
-            📊 Export Formatted Excel (.xlsx)
-        </button>
-    </div>
-
-    <!-- Global General Details -->
-    <div class="card">
-        <div class="card-header">
-            <h2>📋 General Training Information</h2>
-        </div>
-        <div class="grid">
-            <div class="form-group">
-                <label>Activity / Training Title</label>
-                <input type="text" id="activityTitle" value="HRD Capability Building Program" oninput="computeBudget()">
-            </div>
-            <div class="form-group">
-                <label>Approved Fund Allocation (₱)</label>
-                <input type="number" id="fund" value="500000" oninput="computeBudget()">
-            </div>
-            <div class="form-group">
-                <label>Number of Participants (Pax)</label>
-                <input type="number" id="participants" value="50" oninput="computeBudget()">
-            </div>
-            <div class="form-group">
-                <label>Default PMT Count (Pax)</label>
-                <input type="number" id="defaultPmt" value="20" oninput="updateAllVenuePMTs()">
-            </div>
-        </div>
-    </div>
-
-    <!-- Training Materials Section -->
-    <div class="card">
-        <div class="card-header">
-            <h2>📚 Training Materials & Supplies</h2>
-        </div>
-        <div class="grid">
-            <div class="form-group">
-                <label>Materials Cost Per Participant (₱)</label>
-                <input type="number" id="materialsRate" value="250" oninput="computeBudget()">
-            </div>
-            <div class="form-group">
-                <label>Total Materials Cost (Computed)</label>
-                <input type="text" id="materialsComputed" readonly value="₱0.00">
-            </div>
-        </div>
-    </div>
-
-    <!-- Venues & Schedules Container -->
-    <div class="card">
-        <div class="card-header">
-            <h2>📍 Venue Schedules & Logistics</h2>
-            <button class="btn-secondary" onclick="addVenue()">+ Add Another Venue</button>
-        </div>
-        
-        <div id="venuesContainer">
-            <!-- Venue Cards dynamic injection -->
-        </div>
-    </div>
-
-    <!-- Medicine & Contingency Section -->
-    <div class="card">
-        <div class="card-header">
-            <h2>🩹 Medicine & Contingency Allocation</h2>
-        </div>
-        <div class="grid">
-            <div class="form-group">
-                <label>Medicine Budget Allocation (₱)</label>
-                <input type="number" id="medicine" value="0" oninput="computeBudget()">
-            </div>
-            <div class="form-group">
-                <label>Contingency Budget Allocation (₱)</label>
-                <input type="number" id="contingency" value="0" oninput="computeBudget()">
-            </div>
-        </div>
-    </div>
-
-    <!-- Overall Summary Indicators -->
-    <div class="summary-grid">
-        <div class="summary-card">
-            <h3>Peak Total Pax</h3>
-            <div class="value" id="summaryPax">0</div>
-        </div>
-        <div class="summary-card">
-            <h3>Total Board & Lodging</h3>
-            <div class="value" id="summaryLodging">₱0.00</div>
-        </div>
-        <div class="summary-card">
-            <h3>Total Food Meals</h3>
-            <div class="value" id="summaryFood">₱0.00</div>
-        </div>
-        <div class="summary-card">
-            <h3>Total Van Hire</h3>
-            <div class="value" id="summaryVan">₱0.00</div>
-        </div>
-        <div class="summary-card">
-            <h3>Peak Vans Needed</h3>
-            <div class="value" id="summaryVanCount">0</div>
-        </div>
-    </div>
-
-    <!-- Budget Breakdown Table -->
-    <div class="card">
-        <div class="card-header">
-            <h2>📑 Itemized Budget Breakdown</h2>
-        </div>
-        <div class="table-responsive">
-            <table id="breakdownTable">
-                <thead>
-                    <tr>
-                        <th>Item Description</th>
-                        <th class="text-center">Unit</th>
-                        <th class="text-center">Quantity</th>
-                        <th class="text-right">Unit Rate / Cost (₱)</th>
-                        <th class="text-right">Total Cost (₱)</th>
-                    </tr>
-                </thead>
-                <tbody id="breakdownBody">
-                    <!-- Dynamic rows inserted here -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Total Summary & Balance Box -->
-    <div class="total-box">
-        <div class="total-row">
-            <span>Approved Fund Allocation:</span>
-            <span id="boxFund">₱0.00</span>
-        </div>
-        <div class="total-row grand-total">
-            <span>GRAND TOTAL BUDGET REQUIRED:</span>
-            <span id="boxGrandTotal">₱0.00</span>
-        </div>
-        <div class="total-row">
-            <span>Remaining Fund Balance:</span>
-            <span id="boxRemaining" class="green-text">₱0.00</span>
-        </div>
-        <div class="total-row">
-            <span>Budget Utilization Rate:</span>
-            <span id="boxUtilization" class="green-text">0.00%</span>
-        </div>
-    </div>
-
-</div>
-
-<script>
-let venueCount = 0;
-
-function money(x) {
-    return Number(x).toLocaleString('en-PH', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
-}
-
-function addVenue(name = "", days = 3, pmtVal = null, lodgingRate = 2000, vanRate = 6500) {
-    venueCount++;
-    const venueId = venueCount;
-    const defaultPmt = pmtVal !== null ? pmtVal : (document.getElementById("defaultPmt")?.value || 20);
-
-    const venueHTML = `
-    <div class="venue-card" id="venueCard_${venueId}">
-        <div class="venue-header">
-            <div class="venue-title">Venue Location #${venueId}</div>
-            ${venueId > 1 ? `<button class="btn-danger" onclick="removeVenue(${venueId})">✕ Remove Venue</button>` : ''}
-        </div>
-        
-        <div class="grid">
-            <div class="form-group">
-                <label>Venue Name / Location</label>
-                <input type="text" id="venueName_${venueId}" value="${name || (venueId === 1 ? 'TBA Venue' : 'SDO Laguna')}" oninput="computeBudget()">
-            </div>
-            <div class="form-group">
-                <label>Duration at Venue (Days)</label>
-                <input type="number" id="venueDays_${venueId}" value="${days}" min="1" oninput="computeBudget()">
-            </div>
-            <div class="form-group">
-                <label>PMT assigned to Venue (Pax)</label>
-                <input type="number" id="venuePmt_${venueId}" value="${defaultPmt}" min="0" oninput="computeBudget()">
-            </div>
-        </div>
-
-        <div class="checkbox-card" style="margin-top:15px;">
-            <div class="grid">
-                <div class="form-group">
-                    <label class="checkbox-label" style="border:none; padding:0; background:none;">
-                        <input type="checkbox" id="hasLodging_${venueId}" ${venueId === 1 ? 'checked' : ''} onchange="toggleLodgingInput(${venueId}); computeBudget();">
-                        Requires Board & Lodging at this venue?
-                    </label>
-                </div>
-                <div class="form-group" id="lodgingRateGroup_${venueId}">
-                    <label>Board & Lodging Rate / Person / Day (₱)</label>
-                    <input type="number" id="lodgingRate_${venueId}" value="${lodgingRate}" oninput="computeBudget()">
-                </div>
-            </div>
-        </div>
-
-        <div class="checkbox-card">
-            <label style="margin-bottom:8px; display:block;">Meals Included at Venue:</label>
-            <div class="checkbox-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="breakfast_${venueId}" onchange="computeBudget()"> Breakfast (₱150)
-                </label>
-                <label class="checkbox-label">
-                    <input type="checkbox" id="amSnack_${venueId}" checked onchange="computeBudget()"> AM Snack (₱100)
-                </label>
-                <label class="checkbox-label">
-                    <input type="checkbox" id="lunch_${venueId}" checked onchange="computeBudget()"> Lunch (₱350)
-                </label>
-                <label class="checkbox-label">
-                    <input type="checkbox" id="pmSnack_${venueId}" checked onchange="computeBudget()"> PM Snack (₱100)
-                </label>
-                <label class="checkbox-label">
-                    <input type="checkbox" id="dinner_${venueId}" onchange="computeBudget()"> Dinner (₱350)
-                </label>
-            </div>
-        </div>
-
-        <div class="grid" style="margin-top:15px;">
-            <div class="form-group">
-                <label>Van Rental Rate / Van (₱)</label>
-                <input type="number" id="vanRate_${venueId}" value="${vanRate}" oninput="computeBudget()">
-            </div>
-            <div class="form-group">
-                <label>Total Round Trips (SDO ↔ Venue)</label>
-                <input type="text" id="vanTripsText_${venueId}" readonly value="2 Trips (1 Outbound, 1 Return)">
-            </div>
-            <div class="form-group">
-                <label>Vans Needed (Max 10 Pax/Van)</label>
-                <input type="text" id="vansNeeded_${venueId}" readonly value="0 Vans">
-            </div>
-        </div>
-    </div>
-    `;
-
-    document.getElementById("venuesContainer").insertAdjacentHTML("beforeend", venueHTML);
-    toggleLodgingInput(venueId);
-    computeBudget();
-}
-
-function toggleLodgingInput(venueId) {
-    const hasLodging = document.getElementById(`hasLodging_${venueId}`).checked;
-    const rateGroup = document.getElementById(`lodgingRateGroup_${venueId}`);
-    if (rateGroup) {
-        rateGroup.style.display = hasLodging ? "block" : "none";
-    }
-}
-
-function removeVenue(id) {
-    const card = document.getElementById(`venueCard_${id}`);
-    if (card) {
-        card.remove();
-        computeBudget();
-    }
-}
-
-function updateAllVenuePMTs() {
-    const globalPmt = parseInt(document.getElementById("defaultPmt").value) || 0;
-    const cards = document.querySelectorAll('.venue-card');
-    cards.forEach(card => {
-        const id = card.id.split('_')[1];
-        const pmtInput = document.getElementById(`venuePmt_${id}`);
-        if (pmtInput) pmtInput.value = globalPmt;
-    });
-    computeBudget();
-}
-
-function computeBudget() {
-    const participants = parseInt(document.getElementById("participants").value) || 0;
-    const fund = parseFloat(document.getElementById("fund").value) || 0;
-    const materialsRate = parseFloat(document.getElementById("materialsRate").value) || 0;
-
-    const materialsTotal = participants * materialsRate;
-    document.getElementById("materialsComputed").value = "₱" + money(materialsTotal);
-
-    let globalLodgingTotal = 0;
-    let globalFoodTotal = 0;
-    let globalVanTotal = 0;
-    let peakPax = 0;
-    let maxVansNeeded = 0;
-
-    const breakdownItems = [];
-
-    if (materialsTotal > 0) {
-        breakdownItems.push({
-            desc: "Training Materials Cost",
-            unit: "Pax",
-            qty: participants,
-            rate: materialsRate,
-            total: materialsTotal
-        });
-    }
-
-    const venueCards = document.querySelectorAll('.venue-card');
-    venueCards.forEach(card => {
-        const id = card.id.split('_')[1];
-        const venueName = document.getElementById(`venueName_${id}`).value || `Venue #${id}`;
-        const days = parseInt(document.getElementById(`venueDays_${id}`).value) || 0;
-        const venuePmt = parseInt(document.getElementById(`venuePmt_${id}`).value) || 0;
-        
-        const totalPaxVenue = participants + venuePmt;
-        if (totalPaxVenue > peakPax) peakPax = totalPaxVenue;
-
-        const hasLodging = document.getElementById(`hasLodging_${id}`).checked;
-        const lodgingRate = hasLodging ? (parseFloat(document.getElementById(`lodgingRate_${id}`).value) || 0) : 0;
-        const lodgingTotal = hasLodging ? (totalPaxVenue * lodgingRate * days) : 0;
-        globalLodgingTotal += lodgingTotal;
-
-        if (hasLodging && lodgingTotal > 0) {
-            breakdownItems.push({
-                desc: `Board & Lodging - ${venueName} (${days} Days)`,
-                unit: "Pax",
-                qty: totalPaxVenue,
-                rate: lodgingRate * days,
-                total: lodgingTotal
-            });
-        }
-
-        let dailyMealRatePerPax = 0;
-        if (document.getElementById(`breakfast_${id}`).checked) dailyMealRatePerPax += 150;
-        if (document.getElementById(`amSnack_${id}`).checked) dailyMealRatePerPax += 100;
-        if (document.getElementById(`lunch_${id}`).checked) dailyMealRatePerPax += 350;
-        if (document.getElementById(`pmSnack_${id}`).checked) dailyMealRatePerPax += 100;
-        if (document.getElementById(`dinner_${id}`).checked) dailyMealRatePerPax += 350;
-
-        const foodTotalVenue = dailyMealRatePerPax * totalPaxVenue * days;
-        globalFoodTotal += foodTotalVenue;
-
-        if (foodTotalVenue > 0) {
-            breakdownItems.push({
-                desc: `Food Expense - ${venueName} (${days} Days)`,
-                unit: "Pax",
-                qty: totalPaxVenue,
-                rate: dailyMealRatePerPax * days,
-                total: foodTotalVenue
-            });
-        }
-
-        const vanRate = parseFloat(document.getElementById(`vanRate_${id}`).value) || 0;
-        const totalRoundTrips = 2;
-        const vansNeeded = totalPaxVenue > 0 ? Math.ceil(totalPaxVenue / 10) : 0;
-        
-        if (vansNeeded > maxVansNeeded) maxVansNeeded = vansNeeded;
-
-        document.getElementById(`vansNeeded_${id}`).value = `${vansNeeded} Vans (${vansNeeded * totalRoundTrips} Trips Total)`;
-
-        const vanTotalVenue = vansNeeded * vanRate * totalRoundTrips;
-        globalVanTotal += vanTotalVenue;
-
-        if (vanTotalVenue > 0) {
-            breakdownItems.push({
-                desc: `Van Rental - ${venueName} (${vansNeeded} Vans, Round-Trip: SDO ↔ Venue)`,
-                unit: "Vans",
-                qty: vansNeeded,
-                rate: vanRate * totalRoundTrips,
-                total: vanTotalVenue
-            });
-        }
-    });
-
-    const medicine = parseFloat(document.getElementById("medicine").value) || 0;
-    const contingency = parseFloat(document.getElementById("contingency").value) || 0;
-
-    if (medicine > 0) {
-        breakdownItems.push({
-            desc: "Medicine Allocation",
-            unit: "Lot",
-            qty: 1,
-            rate: medicine,
-            total: medicine
-        });
-    }
-
-    if (contingency > 0) {
-        breakdownItems.push({
-            desc: "Contingency Allocation",
-            unit: "Lot",
-            qty: 1,
-            rate: contingency,
-            total: contingency
-        });
-    }
-
-    const grandTotal = materialsTotal + globalLodgingTotal + globalFoodTotal + globalVanTotal + medicine + contingency;
-    const remaining = fund - grandTotal;
-    const utilization = fund > 0 ? (grandTotal / fund) * 100 : 0;
-
-    document.getElementById("summaryPax").innerText = peakPax;
-    document.getElementById("summaryLodging").innerText = "₱" + money(globalLodgingTotal);
-    document.getElementById("summaryFood").innerText = "₱" + money(globalFoodTotal);
-    document.getElementById("summaryVan").innerText = "₱" + money(globalVanTotal);
-    document.getElementById("summaryVanCount").innerText = maxVansNeeded;
-
-    const tbody = document.getElementById("breakdownBody");
-    tbody.innerHTML = "";
-
-    if (breakdownItems.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center" style="color:#94a3b8; padding:20px;">No billable items selected.</td></tr>`;
-    } else {
-        breakdownItems.forEach(item => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td><strong>${item.desc}</strong></td>
-                <td class="text-center">${item.unit}</td>
-                <td class="text-center">${item.qty}</td>
-                <td class="text-right">₱${money(item.rate)}</td>
-                <td class="text-right"><strong>₱${money(item.total)}</strong></td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    document.getElementById("boxFund").innerText = "₱" + money(fund);
-    document.getElementById("boxGrandTotal").innerText = "₱" + money(grandTotal);
-    
-    const remainingEl = document.getElementById("boxRemaining");
-    remainingEl.innerText = "₱" + money(remaining);
-    remainingEl.className = remaining >= 0 ? "green-text" : "red-text";
-
-    const utilEl = document.getElementById("boxUtilization");
-    utilEl.innerText = utilization.toFixed(2) + "%";
-    utilEl.className = utilization <= 100 ? "green-text" : "red-text";
-}
-
-// ADVANCED FORMATTED EXCEL EXPORT
-function exportToExcel() {
-    const activityTitle = document.getElementById("activityTitle").value || "HRD Training Program";
-    const fund = parseFloat(document.getElementById("fund").value) || 0;
-    const participants = parseInt(document.getElementById("participants").value) || 0;
-    const defaultPmt = parseInt(document.getElementById("defaultPmt").value) || 0;
-    const today = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
-
-    // Build Formatted Array of Objects/Cells
-    const wsData = [
-        ["DEPARTMENT OF EDUCATION - SCHOOLS DIVISION OFFICE OF LAGUNA"],
-        ["HRD TRAINING BUDGET PLANNER & ITEMIZATION"],
-        [],
-        ["Activity Title:", activityTitle, "", "Date Generated:", today],
-        ["Participants (Pax):", participants, "", "Default PMT (Pax):", defaultPmt],
-        ["Fund Allocation:", fund, "", "Status:", "Official Proposal"],
-        [],
-        ["Item Description", "Unit", "Quantity", "Unit Rate / Cost", "Total Amount"]
-    ];
-
-    // Collect Rows
-    const rows = document.querySelectorAll("#breakdownBody tr");
-    let grandTotal = 0;
-
-    rows.forEach(row => {
-        const cells = row.querySelectorAll("td");
-        if (cells.length === 5) {
-            const desc = cells[0].innerText;
-            const unit = cells[1].innerText;
-            const qty = parseFloat(cells[2].innerText) || 0;
-            const rate = parseFloat(cells[3].innerText.replace(/[^0-9.-]+/g, "")) || 0;
-            const total = parseFloat(cells[4].innerText.replace(/[^0-9.-]+/g, "")) || 0;
-
-            grandTotal += total;
-            wsData.push([desc, unit, qty, rate, total]);
-        }
-    });
-
-    const remaining = fund - grandTotal;
-    const utilization = fund > 0 ? (grandTotal / fund) * 100 : 0;
-
-    // Append Summary Rows
-    wsData.push([]);
-    wsData.push(["GRAND TOTAL BUDGET REQUIRED", "", "", "", grandTotal]);
-    wsData.push(["APPROVED FUND ALLOCATION", "", "", "", fund]);
-    wsData.push(["REMAINING FUND BALANCE", "", "", "", remaining]);
-    wsData.push(["BUDGET UTILIZATION RATE", "", "", "", utilization / 100]);
-
-    // Create Worksheet
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-    // Number Formatting Ranges (Currency & Percentages)
-    const currencyFmt = '"₱"#,##0.00;("₱"#,##0.00);"-"';
-    const percentFmt = '0.00%';
-    const numberFmt = '#,##0';
-
-    // Apply Formats Cell by Cell
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-        for (let C = range.s.c; C <= range.e.c; ++C) {
-            const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
-            if (!ws[cell_address]) continue;
-
-            // Header Metadata Currency
-            if ((R === 5 && C === 1) || (R >= 8 && C >= 3)) {
-                if (typeof ws[cell_address].v === 'number') {
-                    if (R === range.e.r && C === 4) {
-                        ws[cell_address].z = percentFmt;
-                    } else {
-                        ws[cell_address].z = currencyFmt;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DepEd SDO Laguna - HRD Budget Planner & COA Procurement System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- SheetJS for Excel Exports -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        deped: {
+                            blue: '#003366',
+                            gold: '#FFCC00',
+                            navy: '#002244',
+                            light: '#EBF3FA',
+                            red: '#CC0000',
+                            green: '#008000'
+                        }
                     }
                 }
-            } else if (R >= 8 && C === 2 && typeof ws[cell_address].v === 'number') {
-                ws[cell_address].z = numberFmt;
             }
         }
-    }
+    </script>
+    <style>
+        [v-cloak] { display: none; }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; font-size: 11pt; }
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen antialiased">
+    <div id="app" v-cloak class="min-h-screen flex flex-col">
+        
+        <!-- TOP NAVIGATION BAR -->
+        <header class="bg-deped-navy text-white shadow-md sticky top-0 z-40 no-print">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-deped-gold text-deped-navy p-2 rounded-lg font-bold text-xl flex items-center justify-center shadow">
+                            <i data-lucide="award" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h1 class="font-bold text-lg leading-tight tracking-wide">HRD Training Budget Planner </h1>
+                            <p class="text-xs text-blue-200">SDO Laguna Multi-Venue Logistics & Procurement Automation</p>
+                        </div>
+                    </div>
+                    
+                    <nav class="hidden lg:flex space-x-1">
+                        <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id"
+                            :class="[activeTab === tab.id ? 'bg-deped-blue text-white font-semibold border-b-2 border-deped-gold' : 'text-slate-300 hover:text-white hover:bg-slate-800', 'px-3 py-2 rounded-t-md text-sm transition-all flex items-center space-x-2']">
+                            <i :data-lucide="tab.icon" class="w-4 h-4"></i>
+                            <span>{{ tab.name }}</span>
+                        </button>
+                    </nav>
 
-    // Set Column Widths for Optimal View
-    ws['!cols'] = [
-        { wch: 48 }, // Item Description
-        { wch: 12 }, // Unit
-        { wch: 12 }, // Quantity
-        { wch: 22 }, // Unit Rate
-        { wch: 24 }  // Total Amount
-    ];
+                    <div class="flex items-center space-x-2">
+                        <button @click="exportDetailedExcel" class="bg-deped-gold text-deped-navy text-xs font-bold px-3 py-1.5 rounded shadow hover:bg-amber-300 transition flex items-center space-x-1">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                            <span>Export Detailed Excel (.xlsx)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="lg:hidden bg-deped-blue border-t border-slate-700 px-2 py-2 flex justify-around text-xs">
+                <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id"
+                    :class="[activeTab === tab.id ? 'text-deped-gold font-bold' : 'text-slate-300', 'flex flex-col items-center py-1']">
+                    <i :data-lucide="tab.icon" class="w-5 h-5 mb-1"></i>
+                    <span>{{ tab.shortName }}</span>
+                </button>
+            </div>
+        </header>
 
-    // Page Setup for Printing (Fit to 1 Page Wide Landscape)
-    ws['!pageSetup'] = { orientation: 'landscape', fitToWidth: 1, fitToHeight: 0 };
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 no-print">
+            
+            <!-- COMPLIANCE WARNING BANNER -->
+            <div v-if="suppliesExceededWarning" class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg shadow-sm flex items-start space-x-3">
+                <i data-lucide="alert-triangle" class="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5"></i>
+                <div class="flex-1">
+                    <h3 class="text-sm font-bold text-red-800">COA & DepEd Policy Limit Warning!</h3>
+                    <p class="text-xs text-red-700 mt-0.5">
+                        Participant Training Supplies rate is <strong>₱{{ participantPerPaxRate.toFixed(2) }}/pax</strong>. 
+                        DepEd Order No. 030, s. 2021 caps Participant Kit supplies strictly at <strong>₱250.00/pax</strong>. Items tagged for PMT use are excluded from this cap. Adjust quantities or reassign items to PMT.
+                    </p>
+                </div>
+                <button @click="activeTab = 'planner'" class="text-xs bg-red-600 text-white px-3 py-1.5 rounded shadow hover:bg-red-700 font-medium">Adjust Materials</button>
+            </div>
 
-    // Create & Export Workbook
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Budget Summary");
+            <!-- TAB 1: DASHBOARD -->
+            <div v-show="activeTab === 'dashboard'" class="space-y-6">
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-800">HRD Training & Procurement Workspace</h2>
+                            <p class="text-slate-500 text-sm">DepEd SDO Laguna Integrated Activity Planner</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button @click="saveProposal" class="bg-deped-blue hover:bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 shadow transition">
+                                <i data-lucide="save" class="w-4 h-4"></i>
+                                <span>Save Proposal Draft</span>
+                            </button>
+                            <button @click="activeTab = 'preview'" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 shadow transition">
+                                <i data-lucide="file-text" class="w-4 h-4"></i>
+                                <span>View Document Preview</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-    const fileName = `${activityTitle.replace(/[^a-zA-Z0-9]/g, "_")}_Budget_Planner.xlsx`;
-    XLSX.writeFile(wb, fileName);
-}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                        <div class="p-3 bg-blue-50 text-deped-blue rounded-lg"><i data-lucide="files" class="w-6 h-6"></i></div>
+                        <div>
+                            <p class="text-xs font-semibold uppercase text-slate-400">Stored Proposals</p>
+                            <p class="text-lg font-bold text-slate-800">{{ savedProposals.length }} Proposal(s)</p>
+                            <span class="text-xs text-blue-600 font-medium">Local Browser Storage</span>
+                        </div>
+                    </div>
 
-window.onload = function() {
-    addVenue("Main Training Center", 3, 20, 2000, 6500);
-};
-</script>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                        <div class="p-3 bg-amber-50 text-amber-600 rounded-lg"><i data-lucide="banknote" class="w-6 h-6"></i></div>
+                        <div>
+                            <p class="text-xs font-semibold uppercase text-slate-400">Fund Allocation</p>
+                            <p class="text-lg font-bold text-slate-800">₱{{ proposal.fund.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</p>
+                            <span class="text-xs text-slate-500">Utilization: {{ fundUtilization.toFixed(1) }}%</span>
+                        </div>
+                    </div>
 
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg"><i data-lucide="users" class="w-6 h-6"></i></div>
+                        <div>
+                            <p class="text-xs font-semibold uppercase text-slate-400">Participant Supplies Rate</p>
+                            <p :class="[participantPerPaxRate > 250 ? 'text-red-600' : 'text-emerald-700', 'text-lg font-bold']">
+                                ₱{{ participantPerPaxRate.toFixed(2) }} <span class="text-xs text-slate-500 font-normal">/ pax</span>
+                            </p>
+                            <span class="text-xs text-slate-500">Cap: ₱250.00 (DO 030 s. 2021)</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                        <div class="p-3 bg-purple-50 text-purple-600 rounded-lg"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
+                        <div>
+                            <p class="text-xs font-semibold uppercase text-slate-400">COA Audit Score</p>
+                            <p class="text-lg font-bold text-purple-800">{{ auditHealthScore }}%</p>
+                            <span class="text-xs text-emerald-600 font-medium">Pre-Audit Compliant</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center space-x-2">
+                        <i data-lucide="folder" class="w-5 h-5 text-deped-blue"></i>
+                        <span>Saved Working Proposals</span>
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 border-b text-slate-600">
+                                    <th class="p-2.5">Title</th>
+                                    <th class="p-2.5">Date</th>
+                                    <th class="p-2.5 text-center">Total Headcount</th>
+                                    <th class="p-2.5 text-right">Fund Allocation</th>
+                                    <th class="p-2.5 text-right">Grand Total Cost</th>
+                                    <th class="p-2.5 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <tr v-for="p in savedProposals" :key="p.id">
+                                    <td class="p-2.5 font-bold text-slate-800">{{ p.title }}</td>
+                                    <td class="p-2.5">{{ p.date }}</td>
+                                    <td class="p-2.5 text-center">{{ p.totalPax }} Pax</td>
+                                    <td class="p-2.5 text-right">₱{{ p.fund.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</td>
+                                    <td class="p-2.5 text-right font-bold text-deped-blue">₱{{ p.grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</td>
+                                    <td class="p-2.5 text-center">
+                                        <button @click="deleteProposal(p.id)" class="text-red-500 hover:text-red-700 font-bold">Delete</button>
+                                    </td>
+                                </tr>
+                                <tr v-if="savedProposals.length === 0">
+                                    <td colspan="6" class="p-4 text-center text-slate-400">No saved proposals found in browser storage. Click "Save Proposal Draft" above.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: HRD FULL BUDGET PLANNER -->
+            <div v-show="activeTab === 'planner'" class="space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
+                    
+                    <!-- SECTION 1: GENERAL TRAINING DETAILS -->
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-deped-blue bg-blue-50 p-2 rounded border-l-4 border-deped-blue mb-4">I. General Activity & Demographic Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Activity / Training Title:</label>
+                                <input v-model="proposal.title" type="text" class="w-full text-sm border-slate-300 rounded-lg p-2.5 border focus:ring-2 focus:ring-deped-blue">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Approved Fund Allocation (₱):</label>
+                                <input v-model.number="proposal.fund" type="number" class="w-full text-sm border-slate-300 rounded-lg p-2.5 border focus:ring-2 focus:ring-deped-blue">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Date of Activity:</label>
+                                <input v-model="proposal.date" type="text" class="w-full text-sm border-slate-300 rounded-lg p-2.5 border focus:ring-2 focus:ring-deped-blue">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Fund Source:</label>
+                                <input v-model="proposal.fundSource" type="text" class="w-full text-sm border-slate-300 rounded-lg p-2.5 border focus:ring-2 focus:ring-deped-blue">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Default PMT Count Across Venues:</label>
+                                <input v-model.number="proposal.paxPMT" @input="updateAllVenuePMTs" type="number" class="w-full text-sm border-slate-300 rounded-lg p-2.5 border">
+                            </div>
+                        </div>
+
+                        <!-- Position Demographics -->
+                        <div class="bg-slate-50 p-4 border rounded-xl space-y-2">
+                            <label class="block text-xs font-bold text-slate-700 uppercase">Participant Breakdown by DepEd Position:</label>
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600">Teaching (Pax):</label>
+                                    <input v-model.number="proposal.paxTeaching" type="number" class="w-full text-xs p-2 border rounded">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600">Related-Teaching (RT):</label>
+                                    <input v-model.number="proposal.paxRT" type="number" class="w-full text-xs p-2 border rounded">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600">School Admin (SA):</label>
+                                    <input v-model.number="proposal.paxSA" type="number" class="w-full text-xs p-2 border rounded">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600">Non-Teaching (NT):</label>
+                                    <input v-model.number="proposal.paxNT" type="number" class="w-full text-xs p-2 border rounded">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600">Total Participants:</label>
+                                    <input :value="participantPaxTotal" readonly type="number" class="w-full text-xs p-2 border rounded bg-slate-200 font-bold">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: TRAINING MATERIALS & SUPPLIES (SPLIT BY PARTICIPANT VS PMT) -->
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-deped-blue bg-blue-50 p-2 rounded border-l-4 border-deped-blue mb-4">II. Training Materials & Supplies Itemization</h3>
+                        
+                        <!-- Add Material Toolbar -->
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-2 mb-4 bg-slate-50 p-3 rounded-lg border">
+                            <div class="md:col-span-2">
+                                <label class="block text-[10px] text-slate-500 font-semibold mb-0.5">Preset / Item Name:</label>
+                                <input v-model="newMaterialName" list="presetCatalog" @change="onCatalogSelect" type="text" placeholder="Type or select item..." class="w-full text-xs p-2 border rounded bg-white">
+                                <datalist id="presetCatalog">
+                                    <option v-for="(price, name) in presetCatalog" :key="name" :value="name">₱{{ price }}</option>
+                                </datalist>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-500 font-semibold mb-0.5">Unit Price (₱):</label>
+                                <input v-model.number="newMaterialPrice" type="number" placeholder="Price" class="w-full text-xs p-2 border rounded bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-500 font-semibold mb-0.5">Quantity:</label>
+                                <input v-model.number="newMaterialQty" type="number" placeholder="Qty" class="w-full text-xs p-2 border rounded bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-500 font-semibold mb-0.5">Allocation Tag:</label>
+                                <select v-model="newMaterialCategory" class="w-full text-xs p-2 border rounded bg-white font-semibold">
+                                    <option value="participant">Participant Kit (Capped)</option>
+                                    <option value="pmt">PMT Common / Secretariat</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button @click="addMaterial" class="mb-4 bg-deped-blue text-white text-xs font-bold rounded px-4 py-2 hover:bg-blue-900">+ Add Material Item</button>
+
+                        <!-- PART A: PARTICIPANT SUPPLIES TABLE -->
+                        <div class="mb-6 border rounded-xl p-4 bg-slate-50/50 space-y-3">
+                            <div class="flex justify-between items-center flex-wrap gap-2">
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wide flex items-center space-x-2">
+                                        <span>A. Participant Supplies Kit</span>
+                                        <span class="text-[10px] font-normal text-slate-500">(Monitored against DO 030, s. 2021 Cap)</span>
+                                    </h4>
+                                </div>
+                                <div class="text-right">
+                                    <span :class="[participantPerPaxRate > 250 ? 'bg-red-100 text-red-800 border-red-300' : 'bg-emerald-100 text-emerald-800 border-emerald-300', 'text-xs px-3 py-1 rounded-full font-bold border inline-block']">
+                                        Rate: ₱{{ participantPerPaxRate.toFixed(2) }} / pax (Max: ₱250.00)
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs bg-white rounded-lg border border-slate-200">
+                                    <thead class="bg-slate-100 border-b">
+                                        <tr>
+                                            <th class="p-2">Item Description</th>
+                                            <th class="p-2 text-center">Qty</th>
+                                            <th class="p-2 text-right">Unit Price (₱)</th>
+                                            <th class="p-2 text-right">Subtotal (₱)</th>
+                                            <th class="p-2 text-center">Tag / Move</th>
+                                            <th class="p-2 text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="(m, idx) in participantMaterials" :key="m.id" class="border-b">
+                                            <td class="p-2 font-medium"><input v-model="m.name" type="text" class="w-full text-xs border rounded p-1"></td>
+                                            <td class="p-2 text-center"><input v-model.number="m.qty" type="number" class="w-16 text-center border rounded p-1"></td>
+                                            <td class="p-2 text-right"><input v-model.number="m.price" type="number" step="0.5" class="w-24 text-right border rounded p-1 font-semibold text-slate-800"></td>
+                                            <td class="p-2 text-right font-bold text-deped-navy">₱{{ (m.qty * m.price).toFixed(2) }}</td>
+                                            <td class="p-2 text-center">
+                                                <button @click="m.category = 'pmt'" class="text-[10px] bg-slate-100 text-slate-700 px-2 py-1 rounded border hover:bg-slate-200 font-semibold">Move to PMT</button>
+                                            </td>
+                                            <td class="p-2 text-center"><button @click="removeMaterialById(m.id)" class="text-red-500 font-bold hover:text-red-700">✕</button></td>
+                                        </tr>
+                                        <tr v-if="participantMaterials.length === 0">
+                                            <td colspan="6" class="p-3 text-center text-slate-400 italic">No participant supplies added yet.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-right text-xs font-bold text-slate-700">Subtotal Participant Supplies: ₱{{ totalParticipantSupplies.toFixed(2) }}</div>
+                        </div>
+
+                        <!-- PART B: PMT COMMON / SECRETARIAT SUPPLIES TABLE -->
+                        <div class="border rounded-xl p-4 bg-slate-50/50 space-y-3">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wide flex items-center space-x-2">
+                                        <span>B. PMT Common Workshop & Secretariat Supplies</span>
+                                        <span class="text-[10px] font-normal text-slate-500">(Account Code: 50202010 — Excluded from Pax Cap)</span>
+                                    </h4>
+                                </div>
+                                <span class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded">Compliant PMT Overhead</span>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs bg-white rounded-lg border border-slate-200">
+                                    <thead class="bg-slate-100 border-b">
+                                        <tr>
+                                            <th class="p-2">Item Description</th>
+                                            <th class="p-2 text-center">Qty</th>
+                                            <th class="p-2 text-right">Unit Price (₱)</th>
+                                            <th class="p-2 text-right">Subtotal (₱)</th>
+                                            <th class="p-2 text-center">Tag / Move</th>
+                                            <th class="p-2 text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="(m, idx) in pmtMaterials" :key="m.id" class="border-b">
+                                            <td class="p-2 font-medium"><input v-model="m.name" type="text" class="w-full text-xs border rounded p-1"></td>
+                                            <td class="p-2 text-center"><input v-model.number="m.qty" type="number" class="w-16 text-center border rounded p-1"></td>
+                                            <td class="p-2 text-right"><input v-model.number="m.price" type="number" step="0.5" class="w-24 text-right border rounded p-1 font-semibold text-slate-800"></td>
+                                            <td class="p-2 text-right font-bold text-deped-navy">₱{{ (m.qty * m.price).toFixed(2) }}</td>
+                                            <td class="p-2 text-center">
+                                                <button @click="m.category = 'participant'" class="text-[10px] bg-slate-100 text-slate-700 px-2 py-1 rounded border hover:bg-slate-200 font-semibold">Move to Participant Kit</button>
+                                            </td>
+                                            <td class="p-2 text-center"><button @click="removeMaterialById(m.id)" class="text-red-500 font-bold hover:text-red-700">✕</button></td>
+                                        </tr>
+                                        <tr v-if="pmtMaterials.length === 0">
+                                            <td colspan="6" class="p-3 text-center text-slate-400 italic">No PMT shared supplies added. Click above to add flipcharts, markers, certificate holders, etc.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-right text-xs font-bold text-slate-700">Subtotal PMT Supplies: ₱{{ totalPMTSupplies.toFixed(2) }}</div>
+                        </div>
+
+                    </div>
+
+                    <!-- SECTION 3: STANDALONE DAY 0 PRE-ACTIVITY LOGISTICS -->
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-deped-blue bg-blue-50 p-2 rounded border-l-4 border-deped-blue mb-4">III. Standalone Day 0 / Pre-Activity Logistics</h3>
+                        
+                        <div class="p-4 border-l-4 border-sky-500 border rounded-xl bg-slate-50/50 space-y-4">
+                            <label class="flex items-center space-x-2 font-bold text-xs">
+                                <input type="checkbox" v-model="proposal.day0.enabled">
+                                <span>Enable Day 0 Activity Setup</span>
+                            </label>
+
+                            <div v-if="proposal.day0.enabled" class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                                    <div>
+                                        <label class="block font-semibold mb-1">PMT Members on Day 0 (Pax):</label>
+                                        <input v-model.number="proposal.day0.pmt" type="number" class="w-full p-2 border rounded">
+                                    </div>
+                                    <div>
+                                        <label class="block font-semibold mb-1">Day 0 Lodging Rate / Person (₱):</label>
+                                        <input v-model.number="proposal.day0.lodgingRate" type="number" class="w-full p-2 border rounded">
+                                    </div>
+                                    <div>
+                                        <label class="block font-semibold mb-1">Day 0 Van Rate / Van (₱):</label>
+                                        <input v-model.number="proposal.day0.vanRate" type="number" class="w-full p-2 border rounded">
+                                    </div>
+                                </div>
+
+                                <div class="bg-white p-3 border rounded-lg">
+                                    <label class="block font-bold text-xs mb-2">Day 0 Meals Included:</label>
+                                    <div class="flex flex-wrap gap-3 text-xs">
+                                        <label><input type="checkbox" v-model="proposal.day0.meals.breakfast"> Breakfast (₱150)</label>
+                                        <label><input type="checkbox" v-model="proposal.day0.meals.amSnack"> AM Snack (₱100)</label>
+                                        <label><input type="checkbox" v-model="proposal.day0.meals.lunch"> Lunch (₱350)</label>
+                                        <label><input type="checkbox" v-model="proposal.day0.meals.pmSnack"> PM Snack (₱100)</label>
+                                        <label><input type="checkbox" v-model="proposal.day0.meals.dinner"> Dinner (₱350)</label>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                                    <label class="flex items-center space-x-2"><input type="checkbox" v-model="proposal.day0.lodging"> Board & Lodging Required</label>
+                                    <label class="flex items-center space-x-2"><input type="checkbox" v-model="proposal.day0.van"> Van Service Required</label>
+                                    <div>
+                                        <label class="block font-semibold mb-1">Van Trip Type:</label>
+                                        <select v-model.number="proposal.day0.vanTrips" class="w-full p-2 border rounded">
+                                            <option :value="1">One-Way (1 Trip)</option>
+                                            <option :value="2">Round Trip (2 Trips)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 4: VENUE SCHEDULES & LOGISTICS -->
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-deped-blue bg-blue-50 p-2 rounded border-l-4 border-deped-blue flex-1">IV. Venue Schedules & Logistics</h3>
+                            <button @click="addVenue" class="ml-3 bg-sky-600 text-white text-xs px-3 py-2 rounded font-bold">+ Add Venue</button>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div v-for="(v, vIdx) in proposal.venues" :key="v.id" class="p-4 border-l-4 border-deped-blue border rounded-xl bg-white space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-xs text-deped-navy">Venue Location #{{ vIdx + 1 }}</span>
+                                    <button v-if="vIdx > 0" @click="removeVenue(vIdx)" class="text-xs text-red-500 font-bold">✕ Remove Venue</button>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                                    <div>
+                                        <label class="block font-semibold mb-1">Venue Name / Location:</label>
+                                        <input v-model="v.name" type="text" class="w-full p-2 border rounded">
+                                    </div>
+                                    <div>
+                                        <label class="block font-semibold mb-1">Duration at Venue (Days):</label>
+                                        <input v-model.number="v.days" type="number" min="1" class="w-full p-2 border rounded">
+                                    </div>
+                                    <div>
+                                        <label class="block font-semibold mb-1">PMT assigned to Venue (Pax):</label>
+                                        <input v-model.number="v.pmt" type="number" min="0" class="w-full p-2 border rounded">
+                                    </div>
+                                </div>
+
+                                <div class="p-3 bg-slate-50 border rounded-lg text-xs space-y-2">
+                                    <label class="flex items-center space-x-2 font-bold">
+                                        <input type="checkbox" v-model="v.hasLodging">
+                                        <span>Requires Board & Lodging at this venue?</span>
+                                    </label>
+                                    <div v-if="v.hasLodging" class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                                        <div>
+                                            <label class="block font-semibold mb-1">Board & Lodging Rate / Person / Day (₱):</label>
+                                            <input v-model.number="v.lodgingRate" type="number" class="w-full p-2 border rounded bg-white">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="p-3 bg-slate-50 border rounded-lg text-xs space-y-2">
+                                    <label class="block font-bold">Meals Included at Venue:</label>
+                                    <div class="flex flex-wrap gap-3">
+                                        <label><input type="checkbox" v-model="v.meals.breakfast"> Breakfast (₱150)</label>
+                                        <label><input type="checkbox" v-model="v.meals.amSnack"> AM Snack (₱100)</label>
+                                        <label><input type="checkbox" v-model="v.meals.lunch"> Lunch (₱350)</label>
+                                        <label><input type="checkbox" v-model="v.meals.pmSnack"> PM Snack (₱100)</label>
+                                        <label><input type="checkbox" v-model="v.meals.dinner"> Dinner (₱350)</label>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                                    <div>
+                                        <label class="block font-semibold mb-1">Van Rental Rate / Van / Trip (₱):</label>
+                                        <input v-model.number="v.vanRate" type="number" class="w-full p-2 border rounded">
+                                    </div>
+                                    <div>
+                                        <label class="block font-semibold mb-1">Trip Type:</label>
+                                        <select v-model.number="v.vanTrips" class="w-full p-2 border rounded">
+                                            <option :value="1">One-Way (1 Trip)</option>
+                                            <option :value="2">Round Trip (2 Trips)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block font-semibold mb-1">Vans Needed (Max 10 Pax/Van):</label>
+                                        <input :value="Math.ceil((participantPaxTotal + v.pmt) / 10) + ' Vans Needed'" readonly class="w-full p-2 border rounded bg-slate-100 font-bold">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 5: MEDICINE & CONTINGENCY -->
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-deped-blue bg-blue-50 p-2 rounded border-l-4 border-deped-blue mb-4">V. Medicine & Contingency Allocations</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                            <div>
+                                <label class="block font-semibold mb-1">Medicine Budget Allocation (₱):</label>
+                                <input v-model.number="proposal.medicine" type="number" class="w-full p-2.5 border rounded">
+                            </div>
+                            <div>
+                                <label class="block font-semibold mb-1">Contingency Budget Allocation (₱):</label>
+                                <input v-model.number="proposal.contingency" type="number" class="w-full p-2.5 border rounded">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 6: OBJECTIVES & OUTCOMES -->
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-deped-blue bg-blue-50 p-2 rounded border-l-4 border-deped-blue mb-4">VI. Objectives & Expected Outcomes</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Activity Objective:</label>
+                                <textarea v-model="proposal.objective" rows="2" class="w-full text-xs p-2 border rounded"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Expected Outputs:</label>
+                                <textarea v-model="proposal.outputs" rows="2" class="w-full text-xs p-2 border rounded"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Expected Outcomes:</label>
+                                <textarea v-model="proposal.outcomes" rows="2" class="w-full text-xs p-2 border rounded"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ITEMIZED BREAKDOWN TABLE -->
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-deped-navy border-b pb-2 mb-3">Itemized Budget Breakdown Matrix</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-100 border-b">
+                                        <th class="p-2">Item Description</th>
+                                        <th class="p-2 text-center">Unit</th>
+                                        <th class="p-2 text-center">Quantity</th>
+                                        <th class="p-2 text-right">Unit Rate (₱)</th>
+                                        <th class="p-2 text-right">Total Cost (₱)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="item in calculatedBreakdown" :key="item.desc" class="border-b">
+                                        <td class="p-2 font-bold">{{ item.desc }}</td>
+                                        <td class="p-2 text-center">{{ item.unit }}</td>
+                                        <td class="p-2 text-center">{{ item.qty }}</td>
+                                        <td class="p-2 text-right">₱{{ item.rate.toFixed(2) }}</td>
+                                        <td class="p-2 text-right font-bold">₱{{ item.total.toFixed(2) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- DARK SUMMARY CARD -->
+                    <div class="p-6 bg-[#111827] text-white rounded-xl shadow-lg space-y-4 font-sans border border-slate-800">
+                        <div class="flex justify-between items-center text-sm md:text-base border-b border-slate-800 pb-3">
+                            <span class="text-slate-300">Approved Fund Allocation:</span>
+                            <span class="font-bold text-white tracking-wide">₱{{ (proposal.fund || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}</span>
+                        </div>
+
+                        <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                            <span class="text-sky-400 font-extrabold text-lg md:text-xl uppercase tracking-wider">GRAND TOTAL BUDGET REQUIRED:</span>
+                            <span class="text-sky-400 font-extrabold text-2xl md:text-3xl tracking-wide">₱{{ grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}</span>
+                        </div>
+
+                        <div class="flex justify-between items-center text-sm md:text-base pt-1">
+                            <span class="text-slate-300">Remaining Fund Balance:</span>
+                            <span :class="[remainingFundBalance < 0 ? 'text-[#f87171]' : 'text-emerald-400', 'font-bold tracking-wide']">
+                                ₱{{ remainingFundBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}
+                            </span>
+                        </div>
+
+                        <div class="flex justify-between items-center text-sm md:text-base pt-1">
+                            <span class="text-slate-300">Budget Utilization Rate:</span>
+                            <span :class="[budgetUtilizationRate > 100 ? 'text-[#f87171]' : 'text-emerald-400', 'font-bold tracking-wide']">
+                                {{ budgetUtilizationRate.toFixed(2) }}%
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- TAB 3: MARKET SCOPING HUB -->
+            <div v-show="activeTab === 'scoping'" class="space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex justify-between items-center border-b pb-4 mb-6">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
+                                <i data-lucide="search" class="w-6 h-6 text-deped-blue"></i>
+                                <span>Automated Market Scoping & ABC Generator</span>
+                            </h2>
+                            <p class="text-xs text-slate-500">Under GPPB guidelines and COA rules, collect 3 price sources to establish a realistic Approved Budget for the Contract (ABC).</p>
+                        </div>
+                        <button @click="addScopingItem" class="bg-deped-blue text-white px-3 py-1.5 rounded text-xs font-semibold flex items-center space-x-1">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>Add Item to Scope</span>
+                        </button>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div v-for="(scope, sIdx) in marketScoping" :key="sIdx" class="border border-slate-200 rounded-xl p-5 bg-slate-50 space-y-4">
+                            <div class="flex justify-between items-center flex-wrap gap-2">
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-6 h-6 rounded-full bg-deped-blue text-white font-bold text-xs flex items-center justify-center">{{ sIdx + 1 }}</span>
+                                    <input v-model="scope.itemName" type="text" placeholder="Item Name" class="font-bold text-slate-800 text-sm border-b border-slate-300 bg-transparent focus:outline-none p-1 w-64">
+                                </div>
+                                <div class="flex items-center space-x-3 text-xs">
+                                    <span class="text-slate-500">Average: <strong>₱{{ calculateScopeAverage(scope).toFixed(2) }}</strong></span>
+                                    <span class="text-emerald-700 font-bold bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
+                                        Recommended ABC (+10% Buffer): ₱{{ calculateRecommendedABC(scope).toFixed(2) }}
+                                    </span>
+                                    <button @click="removeScopingItem(sIdx)" class="text-red-500 hover:text-red-700"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div v-for="(source, srcIdx) in scope.sources" :key="srcIdx" class="bg-white p-3 rounded-lg border border-slate-200 space-y-2">
+                                    <span class="text-xs font-bold text-slate-500 uppercase">Source {{ srcIdx + 1 }}</span>
+                                    <div>
+                                        <label class="block text-[10px] text-slate-500">Supplier Name / Platform:</label>
+                                        <input v-model="source.name" type="text" class="w-full text-xs p-1 border rounded">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-slate-500">Quoted Unit Price (₱):</label>
+                                        <input v-model.number="source.price" type="number" step="0.01" class="w-full text-xs p-1 border rounded font-semibold text-slate-800">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: PRIME-ESG REPORTING -->
+            <div v-show="activeTab === 'prime'" class="space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex justify-between items-center border-b pb-4 mb-6">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
+                                <i data-lucide="bar-chart-3" class="w-6 h-6 text-deped-blue"></i>
+                                <span>PRIME-ESG Learning & Development Summary Report</span>
+                            </h2>
+                            <p class="text-xs text-slate-500">Consolidated L&D statistics across saved proposals for CSC PRIME-HRM audit submission.</p>
+                        </div>
+                        <button @click="exportPRIMEData" class="bg-emerald-600 text-white px-3 py-1.5 rounded text-xs font-semibold flex items-center space-x-1 hover:bg-emerald-700">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                            <span>Export PRIME Summary (.xlsx)</span>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-slate-50 p-4 rounded-xl border text-center">
+                            <p class="text-xs text-slate-500 uppercase font-semibold">Total Trainings</p>
+                            <p class="text-2xl font-bold text-slate-800">{{ savedProposals.length }}</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl border text-center">
+                            <p class="text-xs text-slate-500 uppercase font-semibold">Beneficiaries Reached</p>
+                            <p class="text-2xl font-bold text-slate-800">{{ primeStats.totalPax }} Pax</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl border text-center">
+                            <p class="text-xs text-slate-500 uppercase font-semibold">Total PMT Deployed</p>
+                            <p class="text-2xl font-bold text-slate-800">{{ primeStats.totalPMT }} Staff</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl border text-center">
+                            <p class="text-xs text-slate-500 uppercase font-semibold">Total L&D Budget Investment</p>
+                            <p class="text-2xl font-bold text-deped-blue">₱{{ primeStats.totalCost.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</p>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 border-b text-slate-600">
+                                    <th class="p-2.5">Training Title</th>
+                                    <th class="p-2.5">Date</th>
+                                    <th class="p-2.5 text-center">Teaching</th>
+                                    <th class="p-2.5 text-center">RT</th>
+                                    <th class="p-2.5 text-center">SA</th>
+                                    <th class="p-2.5 text-center">NT</th>
+                                    <th class="p-2.5 text-center">PMT</th>
+                                    <th class="p-2.5 text-center">Total Pax</th>
+                                    <th class="p-2.5 text-right">Total Investment</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <tr v-for="p in savedProposals" :key="p.id">
+                                    <td class="p-2.5 font-bold">{{ p.title }}</td>
+                                    <td class="p-2.5">{{ p.date }}</td>
+                                    <td class="p-2.5 text-center">{{ p.paxTeaching }}</td>
+                                    <td class="p-2.5 text-center">{{ p.paxRT }}</td>
+                                    <td class="p-2.5 text-center">{{ p.paxSA }}</td>
+                                    <td class="p-2.5 text-center">{{ p.paxNT }}</td>
+                                    <td class="p-2.5 text-center">{{ p.paxPMT }}</td>
+                                    <td class="p-2.5 text-center font-bold">{{ p.totalPax }}</td>
+                                    <td class="p-2.5 text-right font-bold text-deped-blue">₱{{ p.grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: PRINT & DOCUMENT PREVIEW -->
+            <div v-show="activeTab === 'preview'" class="space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex justify-between items-center border-b pb-4 mb-6 flex-wrap gap-2">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
+                                <i data-lucide="printer" class="w-6 h-6 text-deped-blue"></i>
+                                <span>Official Document & ActProp Preview</span>
+                            </h2>
+                            <p class="text-xs text-slate-500">Matches official layout: <code>ActProp_DMOS_2026June1.docx</code></p>
+                        </div>
+                        <button @click="triggerPrint" class="bg-deped-blue text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-900 flex items-center space-x-1 shadow">
+                            <i data-lucide="printer" class="w-4 h-4"></i>
+                            <span>Print Document</span>
+                        </button>
+                    </div>
+
+                    <!-- PRINTABLE PAPER CANVAS -->
+                    <div id="printable-document" class="bg-white p-8 md:p-12 rounded border border-slate-300 shadow-inner max-w-4xl mx-auto text-slate-900 font-sans text-xs leading-relaxed space-y-6">
+                        <div class="text-center space-y-1 border-b-2 border-slate-800 pb-4">
+                            <p class="font-bold text-sm tracking-widest uppercase">Republic of the Philippines</p>
+                            <p class="font-bold text-base text-deped-navy uppercase">Department of Education</p>
+                            <p class="text-xs italic">Region / Schools Division Office of Laguna</p>
+                            <h1 class="font-extrabold text-base pt-2 text-slate-900 uppercase tracking-wide">ACTIVITY PROPOSAL</h1>
+                        </div>
+
+                        <table class="w-full text-left border-collapse border border-slate-300">
+                            <tr>
+                                <td class="border border-slate-300 p-2 font-bold w-1/3">Title</td>
+                                <td class="border border-slate-300 p-2">{{ proposal.title }}</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-slate-300 p-2 font-bold">Date / Venue</td>
+                                <td class="border border-slate-300 p-2">{{ proposal.date }} / {{ proposal.venues[0]?.name }}</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-slate-300 p-2 font-bold">No. of Participants</td>
+                                <td class="border border-slate-300 p-2">
+                                    Teaching: {{ proposal.paxTeaching }} | RT: {{ proposal.paxRT }} | SA: {{ proposal.paxSA }} | NT: {{ proposal.paxNT }} | PMT: {{ proposal.paxPMT }}
+                                    <br><strong>Total: {{ totalPax }} Pax</strong>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p class="font-bold text-xs uppercase text-deped-navy">Estimated Budget Summary</p>
+                        <table class="w-full text-left border-collapse border border-slate-300">
+                            <thead class="bg-slate-100">
+                                <tr>
+                                    <th class="border border-slate-300 p-2">Particulars</th>
+                                    <th class="border border-slate-300 p-2 text-center">No. of Pax</th>
+                                    <th class="border border-slate-300 p-2 text-center">No. of Days</th>
+                                    <th class="border border-slate-300 p-2 text-right">Total Estimated Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="border border-slate-300 p-2">Food & Boarding</td>
+                                    <td class="border border-slate-300 p-2 text-center">{{ totalPax }}</td>
+                                    <td class="border border-slate-300 p-2 text-center">{{ maxVenueDays }}</td>
+                                    <td class="border border-slate-300 p-2 text-right font-bold">₱{{ totalFoodCost.toFixed(2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-slate-300 p-2">Participant Supplies (DO 030 s. 2021)</td>
+                                    <td class="border border-slate-300 p-2 text-center">{{ participantPaxTotal }}</td>
+                                    <td class="border border-slate-300 p-2 text-center">1</td>
+                                    <td class="border border-slate-300 p-2 text-right font-bold">₱{{ totalParticipantSupplies.toFixed(2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-slate-300 p-2">PMT Common Workshop Supplies</td>
+                                    <td class="border border-slate-300 p-2 text-center">PMT / Shared</td>
+                                    <td class="border border-slate-300 p-2 text-center">1</td>
+                                    <td class="border border-slate-300 p-2 text-right font-bold">₱{{ totalPMTSupplies.toFixed(2) }}</td>
+                                </tr>
+                                <tr class="bg-slate-50 font-extrabold">
+                                    <td colspan="3" class="border border-slate-300 p-2">GRAND TOTAL</td>
+                                    <td class="border border-slate-300 p-2 text-right text-deped-navy">₱{{ grandTotal.toFixed(2) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="pt-6 border-t-2 border-slate-300">
+                            <p class="font-bold text-xs uppercase mb-4">SIGN-OFF & APPROVAL MATRIX</p>
+                            <div class="grid grid-cols-2 gap-8 text-xs">
+                                <div>
+                                    <p class="text-slate-500">Prepared by:</p>
+                                    <div class="mt-6 border-b border-slate-800 font-bold">ENRICO G. ORTEGA</div>
+                                    <p class="text-[10px] text-slate-500">SEPS–HRD Section</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-500">Reviewed by:</p>
+                                    <div class="mt-6 border-b border-slate-800 font-bold">DARWIN S. TALAMBAYAN EdD</div>
+                                    <p class="text-[10px] text-slate-500">Chief, SGOD</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-500">Recommending Approval:</p>
+                                    <div class="mt-6 border-b border-slate-800 font-bold">BUDDY CHESTER M. REPIA, CESO VI</div>
+                                    <p class="text-[10px] text-slate-500">Assistant Schools Division Superintendent</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-500">Approved:</p>
+                                    <div class="mt-6 border-b border-slate-800 font-bold">SUSAN DL. ORIBIANA CESO V</div>
+                                    <p class="text-[10px] text-slate-500">Schools Division Superintendent</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="bg-slate-800 text-slate-400 py-4 border-t border-slate-700 text-xs text-center no-print">
+            <p>Human Resource Development Section &bull; Schools Division Office of Laguna</p>
+        </footer>
+
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    activeTab: 'dashboard',
+                    tabs: [
+                        { id: 'dashboard', name: 'Dashboard', shortName: 'Dash', icon: 'layout-dashboard' },
+                        { id: 'planner', name: 'HRD Budget Planner', shortName: 'Planner', icon: 'edit-3' },
+                        { id: 'scoping', name: 'Market Scoping', shortName: 'Scoping', icon: 'search' },
+                        { id: 'prime', name: 'PRIME-ESG Report', shortName: 'PRIME', icon: 'bar-chart-3' },
+                        { id: 'preview', name: 'Print & Export', shortName: 'Export', icon: 'printer' }
+                    ],
+                    savedProposals: [],
+                    newMaterialName: '',
+                    newMaterialPrice: null,
+                    newMaterialQty: null,
+                    newMaterialCategory: 'participant',
+                    presetCatalog: {
+                        "Ballpen": 10,
+                        "Notebook": 25,
+                        "Folder": 20,
+                        "Clipboard": 150,
+                        "Yellow Pad": 40,
+                        "Bond Paper (Ream)": 300,
+                        "Marker": 50,
+                        "Permanent Marker": 60,
+                        "Manila Paper": 20,
+                        "Meta Cards": 100,
+                        "Name Tag with Lace": 35,
+                        "ID Holder": 25,
+                        "Eco Bag / Tote Bag": 130,
+                        "Training Bag": 300,
+                        "Journal Notebook": 120,
+                        "USB Flash Drive": 350,
+                        "Certificate Folder": 50,
+                        "Alcohol (500ml)": 120,
+                        "Face Mask": 5,
+                        "Tissue": 50,
+                        "Wet Wipes": 80,
+                        "First Aid Kit": 1200,
+                        "Band-Aid Box": 80,
+                        "ORS Sachet": 15,
+                        "Tarpaulin Backdrop": 1500,
+                        "Certificates": 10,
+                        "Certificate Paper": 8,
+                        "Photocopying": 2,
+                        "Printing Colored": 15,
+                        "Printing Black & White": 2,
+                        "Printer Ink": 800,
+                        "Stapler": 150,
+                        "Staple Wire": 30,
+                        "Tape": 50,
+                        "Scissors": 100,
+                        "Extension Cord": 500,
+                        "Battery Pack": 250,
+                        "Projector Rental": 2500,
+                        "Sound System Rental": 3000,
+                        "Laptop Rental": 1000,
+                        "Wireless Microphone Rental": 800,
+                        "LED Screen Rental": 10000,
+                        "WiFi Rental": 1500,
+                        "Generator Rental": 5000,
+                        "Van Rental": 6500,
+                        "Bus Rental": 18000,
+                        "Fuel Allowance": 3000,
+                        "Toll Fee": 500,
+                        "Parking Fee": 300
+                    },
+                    proposal: {
+                        title: 'NonTeaching CapB',
+                        fund: 500000,
+                        date: 'June 1-3, 2026',
+                        fundSource: 'Approved HRD Fund Allocation',
+                        paxTeaching: 20,
+                        paxRT: 10,
+                        paxSA: 10,
+                        paxNT: 10,
+                        paxPMT: 10,
+                        objective: 'Enhance administrative and technical efficiency across SDO Laguna offices.',
+                        outputs: 'Training completion reports and participant certificates.',
+                        outcomes: 'Improved compliance and standardized office procedures.',
+                        medicine: 0,
+                        contingency: 0,
+                        materials: [
+                            { id: 1, name: 'Notebook', qty: 50, price: 25, category: 'participant' },
+                            { id: 2, name: 'Ballpen', qty: 50, price: 10, category: 'participant' },
+                            { id: 3, name: 'Bond Paper Ream', qty: 2, price: 280, category: 'pmt' },
+                            { id: 4, name: 'Printer Ink', qty: 1, price: 1280, category: 'pmt' },
+                            { id: 5, name: 'Tote Bag', qty: 50, price: 130, category: 'participant' }
+                        ],
+                        day0: {
+                            enabled: false,
+                            pmt: 10,
+                            lodgingRate: 2000,
+                            vanRate: 6500,
+                            lodging: false,
+                            van: false,
+                            vanTrips: 1,
+                            meals: { breakfast: false, amSnack: false, lunch: false, pmSnack: false, dinner: false }
+                        },
+                        venues: [
+                            {
+                                id: 1,
+                                name: 'SGOD Conference',
+                                days: 1,
+                                pmt: 0,
+                                hasLodging: false,
+                                lodgingRate: 0,
+                                vanRate: 0,
+                                vanTrips: 1,
+                                meals: { breakfast: true, amSnack: true, lunch: true, pmSnack: true, dinner: false }
+                            }
+                        ]
+                    },
+                    marketScoping: [
+                        {
+                            itemName: 'Training Notebooks & Kits',
+                            sources: [
+                                { name: 'Shopee Official Store', price: 25 },
+                                { name: 'Local Bookstore Quote', price: 30 },
+                                { name: 'Lazada Flagship', price: 28 }
+                            ]
+                        }
+                    ]
+                }
+            },
+            computed: {
+                participantPaxTotal() {
+                    return (this.proposal.paxTeaching || 0) + (this.proposal.paxRT || 0) + (this.proposal.paxSA || 0) + (this.proposal.paxNT || 0);
+                },
+                totalPax() {
+                    return this.participantPaxTotal + (this.proposal.paxPMT || 0);
+                },
+                participantMaterials() {
+                    return this.proposal.materials.filter(m => (m.category || 'participant') === 'participant');
+                },
+                pmtMaterials() {
+                    return this.proposal.materials.filter(m => m.category === 'pmt');
+                },
+                totalParticipantSupplies() {
+                    return this.participantMaterials.reduce((sum, m) => sum + (m.qty * m.price), 0);
+                },
+                totalPMTSupplies() {
+                    return this.pmtMaterials.reduce((sum, m) => sum + (m.qty * m.price), 0);
+                },
+                totalMaterialsCost() {
+                    return this.totalParticipantSupplies + this.totalPMTSupplies;
+                },
+                maxVenueDays() {
+                    if (this.proposal.venues.length === 0) return 1;
+                    return Math.max(...this.proposal.venues.map(v => v.days || 1));
+                },
+                calculatedBreakdown() {
+                    const items = [];
+
+                    // 1. Participant Materials
+                    this.participantMaterials.forEach(m => {
+                        const total = m.qty * m.price;
+                        if (total > 0) items.push({ desc: `Participant Supply: ${m.name}`, unit: 'Pcs', qty: m.qty, rate: m.price, total });
+                    });
+
+                    // 2. PMT Materials
+                    this.pmtMaterials.forEach(m => {
+                        const total = m.qty * m.price;
+                        if (total > 0) items.push({ desc: `PMT Common Supply: ${m.name}`, unit: 'Pcs', qty: m.qty, rate: m.price, total });
+                    });
+
+                    // 3. Day 0 Calculations
+                    if (this.proposal.day0.enabled) {
+                        const d0Pmt = this.proposal.day0.pmt || 0;
+                        let d0MealRate = 0;
+                        if (this.proposal.day0.meals.breakfast) d0MealRate += 150;
+                        if (this.proposal.day0.meals.amSnack) d0MealRate += 100;
+                        if (this.proposal.day0.meals.lunch) d0MealRate += 350;
+                        if (this.proposal.day0.meals.pmSnack) d0MealRate += 100;
+                        if (this.proposal.day0.meals.dinner) d0MealRate += 350;
+
+                        if (d0MealRate > 0 && d0Pmt > 0) {
+                            items.push({ desc: 'Food Expense - Day 0 Setup', unit: 'Pax', qty: d0Pmt, rate: d0MealRate, total: d0MealRate * d0Pmt });
+                        }
+
+                        if (this.proposal.day0.lodging && this.proposal.day0.lodgingRate > 0) {
+                            items.push({ desc: 'Day 0 Board & Lodging', unit: 'Pax', qty: d0Pmt, rate: this.proposal.day0.lodgingRate, total: d0Pmt * this.proposal.day0.lodgingRate });
+                        }
+
+                        if (this.proposal.day0.van && d0Pmt > 0) {
+                            const vans = Math.ceil(d0Pmt / 10);
+                            const total = vans * this.proposal.day0.vanRate * this.proposal.day0.vanTrips;
+                            items.push({ desc: `Day 0 Van Rental (${vans} Vans)`, unit: 'Vans', qty: vans * this.proposal.day0.vanTrips, rate: this.proposal.day0.vanRate, total });
+                        }
+                    }
+
+                    // 4. Venue Calculations
+                    this.proposal.venues.forEach((v) => {
+                        const vPax = this.participantPaxTotal + (v.pmt || 0);
+                        const days = v.days || 1;
+
+                        if (v.hasLodging && v.lodgingRate > 0) {
+                            const total = vPax * v.lodgingRate * days;
+                            items.push({ desc: `Board & Lodging - ${v.name} (${days} Days)`, unit: 'Pax', qty: vPax, rate: v.lodgingRate * days, total });
+                        }
+
+                        let mealRate = 0;
+                        if (v.meals.breakfast) mealRate += 150;
+                        if (v.meals.amSnack) mealRate += 100;
+                        if (v.meals.lunch) mealRate += 350;
+                        if (v.meals.pmSnack) mealRate += 100;
+                        if (v.meals.dinner) mealRate += 350;
+
+                        if (mealRate > 0) {
+                            const total = mealRate * vPax * days;
+                            items.push({ desc: `Food Expense - ${v.name} (${days} Days)`, unit: 'Pax', qty: vPax, rate: mealRate * days, total });
+                        }
+
+                        const vans = Math.ceil(vPax / 10);
+                        if (vans > 0 && v.vanRate > 0) {
+                            const total = vans * v.vanRate * (v.vanTrips || 1);
+                            items.push({ desc: `Van Rental - ${v.name} (${vans} Vans)`, unit: 'Vans', qty: vans * (v.vanTrips || 1), rate: v.vanRate, total });
+                        }
+                    });
+
+                    // 5. Medicine & Contingency
+                    if (this.proposal.medicine > 0) items.push({ desc: 'Medicine Allocation', unit: 'Lot', qty: 1, rate: this.proposal.medicine, total: this.proposal.medicine });
+                    if (this.proposal.contingency > 0) items.push({ desc: 'Contingency Allocation', unit: 'Lot', qty: 1, rate: this.proposal.contingency, total: this.proposal.contingency });
+
+                    return items;
+                },
+                totalFoodCost() {
+                    return this.calculatedBreakdown.filter(i => i.desc.includes('Food Expense') || i.desc.includes('Day 0 Food')).reduce((sum, i) => sum + i.total, 0);
+                },
+                grandTotal() {
+                    return this.calculatedBreakdown.reduce((sum, i) => sum + i.total, 0);
+                },
+                remainingFundBalance() {
+                    return (this.proposal.fund || 0) - this.grandTotal;
+                },
+                budgetUtilizationRate() {
+                    if (!this.proposal.fund || this.proposal.fund <= 0) return 0;
+                    return (this.grandTotal / this.proposal.fund) * 100;
+                },
+                fundUtilization() {
+                    return this.budgetUtilizationRate;
+                },
+                participantPerPaxRate() {
+                    return this.totalParticipantSupplies / (this.participantPaxTotal || 1);
+                },
+                suppliesExceededWarning() {
+                    return this.participantPerPaxRate > 250;
+                },
+                auditHealthScore() {
+                    let score = 100;
+                    if (this.participantPerPaxRate > 250) score -= 30;
+                    if (this.marketScoping.length === 0) score -= 20;
+                    return score;
+                },
+                primeStats() {
+                    let totalPax = 0, totalPMT = 0, totalCost = 0;
+                    this.savedProposals.forEach(p => {
+                        totalPax += p.totalPax;
+                        totalPMT += p.paxPMT;
+                        totalCost += p.grandTotal;
+                    });
+                    return { totalPax, totalPMT, totalCost };
+                }
+            },
+            methods: {
+                onCatalogSelect() {
+                    if (this.presetCatalog[this.newMaterialName] !== undefined) {
+                        this.newMaterialPrice = this.presetCatalog[this.newMaterialName];
+                        if (!this.newMaterialQty) this.newMaterialQty = this.participantPaxTotal || 1;
+                    }
+                },
+                addMaterial() {
+                    if (!this.newMaterialName) return;
+                    this.proposal.materials.push({
+                        id: Date.now(),
+                        name: this.newMaterialName,
+                        price: this.newMaterialPrice || 0,
+                        qty: this.newMaterialQty || 1,
+                        category: this.newMaterialCategory || 'participant'
+                    });
+                    this.newMaterialName = '';
+                    this.newMaterialPrice = null;
+                    this.newMaterialQty = null;
+                },
+                removeMaterialById(id) {
+                    this.proposal.materials = this.proposal.materials.filter(m => m.id !== id);
+                },
+                addVenue() {
+                    this.proposal.venues.push({
+                        id: Date.now(),
+                        name: 'SDO Laguna Facility',
+                        days: 1,
+                        pmt: this.proposal.paxPMT || 10,
+                        hasLodging: false,
+                        lodgingRate: 2000,
+                        vanRate: 6500,
+                        vanTrips: 2,
+                        meals: { breakfast: false, amSnack: true, lunch: true, pmSnack: true, dinner: false }
+                    });
+                },
+                removeVenue(index) {
+                    this.proposal.venues.splice(index, 1);
+                },
+                updateAllVenuePMTs() {
+                    const globalPmt = this.proposal.paxPMT || 0;
+                    this.proposal.day0.pmt = globalPmt;
+                    this.proposal.venues.forEach(v => { v.pmt = globalPmt; });
+                },
+                addScopingItem() {
+                    this.marketScoping.push({
+                        itemName: 'New Item',
+                        sources: [
+                            { name: 'Shopee', price: 0 },
+                            { name: 'Lazada', price: 0 },
+                            { name: 'Local Supplier', price: 0 }
+                        ]
+                    });
+                },
+                removeScopingItem(index) {
+                    this.marketScoping.splice(index, 1);
+                },
+                calculateScopeAverage(scope) {
+                    const validPrices = scope.sources.map(s => s.price).filter(p => p > 0);
+                    if (validPrices.length === 0) return 0;
+                    return validPrices.reduce((a, b) => a + b, 0) / validPrices.length;
+                },
+                calculateRecommendedABC(scope) {
+                    return this.calculateScopeAverage(scope) * 1.10;
+                },
+                saveProposal() {
+                    const id = Date.now().toString();
+                    const record = {
+                        id: id,
+                        title: this.proposal.title,
+                        date: this.proposal.date,
+                        fund: this.proposal.fund,
+                        paxTeaching: this.proposal.paxTeaching,
+                        paxRT: this.proposal.paxRT,
+                        paxSA: this.proposal.paxSA,
+                        paxNT: this.proposal.paxNT,
+                        paxPMT: this.proposal.paxPMT,
+                        totalPax: this.totalPax,
+                        grandTotal: this.grandTotal
+                    };
+                    this.savedProposals.push(record);
+                    localStorage.setItem('deped_hrd_proposals', JSON.stringify(this.savedProposals));
+                    alert('Proposal saved to local workspace storage!');
+                },
+                deleteProposal(id) {
+                    this.savedProposals = this.savedProposals.filter(p => p.id !== id);
+                    localStorage.setItem('deped_hrd_proposals', JSON.stringify(this.savedProposals));
+                },
+                exportDetailedExcel() {
+                    const wsData = [
+                        ["DEPARTMENT OF EDUCATION - SCHOOLS DIVISION OFFICE OF LAGUNA"],
+                        ["HRD TRAINING BUDGET PLANNER & ITEMIZATION"],
+                        [],
+                        ["Activity Title:", "", "", this.proposal.title],
+                        ["Participants (Pax):", "", "", this.participantPaxTotal],
+                        ["Approved Fund Allocation:", "", "", this.proposal.fund],
+                        [],
+                        ["Item Description", "Unit", "Quantity", "Unit Rate", "Total Amount"]
+                    ];
+
+                    this.calculatedBreakdown.forEach(item => {
+                        wsData.push([item.desc, item.unit, item.qty, item.rate, item.total]);
+                    });
+
+                    wsData.push([]);
+                    wsData.push(["GRAND TOTAL BUDGET REQUIRED", "", "", "", this.grandTotal]);
+                    wsData.push(["APPROVED FUND ALLOCATION", "", "", "", this.proposal.fund]);
+                    wsData.push(["REMAINING FUND BALANCE", "", "", "", this.remainingFundBalance]);
+
+                    const ws = XLSX.utils.aoa_to_sheet(wsData);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Itemized HRD Budget");
+                    XLSX.writeFile(wb, `${(this.proposal.title || 'HRD_Proposal').replace(/[^a-zA-Z0-9]/g, "_")}_Detailed_Itemization.xlsx`);
+                },
+                exportPRIMEData() {
+                    const wsData = [
+                        ["DEPARTMENT OF EDUCATION - SCHOOLS DIVISION OFFICE OF LAGUNA"],
+                        ["PRIME-ESG LEARNING & DEVELOPMENT SUMMARY REPORT"],
+                        [],
+                        ["Title", "Date", "Teaching", "RT", "SA", "NT", "PMT", "Total Pax", "Total Investment"]
+                    ];
+                    this.savedProposals.forEach(p => {
+                        wsData.push([p.title, p.date, p.paxTeaching, p.paxRT, p.paxSA, p.paxNT, p.paxPMT, p.totalPax, p.grandTotal]);
+                    });
+                    const ws = XLSX.utils.aoa_to_sheet(wsData);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "PRIME Summary");
+                    XLSX.writeFile(wb, "PRIME_ESG_LND_Summary_Report.xlsx");
+                },
+                triggerPrint() { window.print(); }
+            },
+            mounted() {
+                const stored = localStorage.getItem('deped_hrd_proposals');
+                if (stored) this.savedProposals = JSON.parse(stored);
+                this.$nextTick(() => lucide.createIcons());
+            },
+            updated() {
+                this.$nextTick(() => lucide.createIcons());
+            }
+        }).mount('#app');
+    </script>
 </body>
 </html>
