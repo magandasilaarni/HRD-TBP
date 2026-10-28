@@ -57,7 +57,7 @@
                             <i data-lucide="award" class="w-6 h-6"></i>
                         </div>
                         <div>
-                            <h1 class="font-bold text-lg leading-tight tracking-wide">HRD Training Budget Planner </h1>
+                            <h1 class="font-bold text-lg leading-tight tracking-wide">HRD Training Budget Planner & COA Procurement System</h1>
                             <p class="text-xs text-blue-200">SDO Laguna Multi-Venue Logistics & Procurement Automation</p>
                         </div>
                     </div>
@@ -98,7 +98,7 @@
                     <h3 class="text-sm font-bold text-red-800">COA & DepEd Policy Limit Warning!</h3>
                     <p class="text-xs text-red-700 mt-0.5">
                         Participant Training Supplies rate is <strong>₱{{ participantPerPaxRate.toFixed(2) }}/pax</strong>. 
-                        DepEd Order No. 030, s. 2021 caps Participant Kit supplies strictly at <strong>₱250.00/pax</strong>. Items tagged for PMT use are excluded from this cap. Adjust quantities or reassign items to PMT.
+                        DepEd Order No. 030, s. 2021 caps Training Kit supplies strictly at <strong>₱250.00/pax</strong> for standard training activities.
                     </p>
                 </div>
                 <button @click="activeTab = 'planner'" class="text-xs bg-red-600 text-white px-3 py-1.5 rounded shadow hover:bg-red-700 font-medium">Adjust Materials</button>
@@ -109,7 +109,7 @@
                 <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <h2 class="text-2xl font-bold text-slate-800">HRD Training & Procurement Workspace</h2>
+                            <h2 class="text-2xl font-bold text-slate-800">HRD Budget & Activity Workspace</h2>
                             <p class="text-slate-500 text-sm">DepEd SDO Laguna Integrated Activity Planner</p>
                         </div>
                         <div class="flex space-x-2">
@@ -129,9 +129,9 @@
                     <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
                         <div class="p-3 bg-blue-50 text-deped-blue rounded-lg"><i data-lucide="files" class="w-6 h-6"></i></div>
                         <div>
-                            <p class="text-xs font-semibold uppercase text-slate-400">Stored Proposals</p>
-                            <p class="text-lg font-bold text-slate-800">{{ savedProposals.length }} Proposal(s)</p>
-                            <span class="text-xs text-blue-600 font-medium">Local Browser Storage</span>
+                            <p class="text-xs font-semibold uppercase text-slate-400">Activity Nature</p>
+                            <p class="text-base font-bold text-slate-800">{{ proposal.activityType === 'training' ? 'Standard Training' : 'Seminar / Meeting' }}</p>
+                            <span class="text-xs text-blue-600 font-medium">Modular Toggles Active</span>
                         </div>
                     </div>
 
@@ -147,11 +147,11 @@
                     <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
                         <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg"><i data-lucide="users" class="w-6 h-6"></i></div>
                         <div>
-                            <p class="text-xs font-semibold uppercase text-slate-400">Participant Supplies Rate</p>
-                            <p :class="[participantPerPaxRate > 250 ? 'text-red-600' : 'text-emerald-700', 'text-lg font-bold']">
+                            <p class="text-xs font-semibold uppercase text-slate-400">Participant Kit Rate</p>
+                            <p :class="[suppliesExceededWarning ? 'text-red-600' : 'text-emerald-700', 'text-lg font-bold']">
                                 ₱{{ participantPerPaxRate.toFixed(2) }} <span class="text-xs text-slate-500 font-normal">/ pax</span>
                             </p>
-                            <span class="text-xs text-slate-500">Cap: ₱250.00 (DO 030 s. 2021)</span>
+                            <span class="text-xs text-slate-500">{{ proposal.activityType === 'training' ? 'Cap: ₱250.00' : 'Exempted' }}</span>
                         </div>
                     </div>
 
@@ -175,6 +175,7 @@
                             <thead>
                                 <tr class="bg-slate-100 border-b text-slate-600">
                                     <th class="p-2.5">Title</th>
+                                    <th class="p-2.5">Nature</th>
                                     <th class="p-2.5">Date</th>
                                     <th class="p-2.5 text-center">Total Headcount</th>
                                     <th class="p-2.5 text-right">Fund Allocation</th>
@@ -185,6 +186,7 @@
                             <tbody class="divide-y divide-slate-100">
                                 <tr v-for="p in savedProposals" :key="p.id">
                                     <td class="p-2.5 font-bold text-slate-800">{{ p.title }}</td>
+                                    <td class="p-2.5 text-slate-600">{{ p.activityType === 'training' ? 'Training' : 'Seminar / Meeting' }}</td>
                                     <td class="p-2.5">{{ p.date }}</td>
                                     <td class="p-2.5 text-center">{{ p.totalPax }} Pax</td>
                                     <td class="p-2.5 text-right">₱{{ p.fund.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</td>
@@ -194,7 +196,7 @@
                                     </td>
                                 </tr>
                                 <tr v-if="savedProposals.length === 0">
-                                    <td colspan="6" class="p-4 text-center text-slate-400">No saved proposals found in browser storage. Click "Save Proposal Draft" above.</td>
+                                    <td colspan="7" class="p-4 text-center text-slate-400">No saved proposals found in browser storage.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -206,13 +208,20 @@
             <div v-show="activeTab === 'planner'" class="space-y-6">
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
                     
-                    <!-- SECTION 1: GENERAL TRAINING DETAILS -->
+                    <!-- SECTION 1: GENERAL ACTIVITY DETAILS & CLASSIFICATION -->
                     <div>
                         <h3 class="text-sm font-bold uppercase tracking-wider text-deped-blue bg-blue-50 p-2 rounded border-l-4 border-deped-blue mb-4">I. General Activity & Demographic Information</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                             <div class="md:col-span-2">
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Activity / Training Title:</label>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Activity Title:</label>
                                 <input v-model="proposal.title" type="text" class="w-full text-sm border-slate-300 rounded-lg p-2.5 border focus:ring-2 focus:ring-deped-blue">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Activity Classification / Nature:</label>
+                                <select v-model="proposal.activityType" class="w-full text-sm border-slate-300 rounded-lg p-2.5 border font-bold text-deped-navy bg-amber-50">
+                                    <option value="training">Standard Training / Workshop (Subject to ₱250 Kit Cap)</option>
+                                    <option value="seminar_meeting">Seminar / Conference / Meeting (Modular Toggles)</option>
+                                </select>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Approved Fund Allocation (₱):</label>
@@ -220,15 +229,42 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Date of Activity:</label>
-                                <input v-model="proposal.date" type="text" class="w-full text-sm border-slate-300 rounded-lg p-2.5 border focus:ring-2 focus:ring-deped-blue">
+                                <input v-model="proposal.date" type="text" class="w-full text-sm border-slate-300 rounded-lg p-2.5 border">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Fund Source:</label>
-                                <input v-model="proposal.fundSource" type="text" class="w-full text-sm border-slate-300 rounded-lg p-2.5 border focus:ring-2 focus:ring-deped-blue">
+                                <input v-model="proposal.fundSource" type="text" class="w-full text-sm border-slate-300 rounded-lg p-2.5 border">
                             </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Default PMT Count Across Venues:</label>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Default PMT / Secretariat Count Across Venues:</label>
                                 <input v-model.number="proposal.paxPMT" @input="updateAllVenuePMTs" type="number" class="w-full text-sm border-slate-300 rounded-lg p-2.5 border">
+                            </div>
+                        </div>
+
+                        <!-- SEMINAR / MEETING REQUIREMENT TOGGLES -->
+                        <div v-if="proposal.activityType === 'seminar_meeting'" class="bg-sky-50 border border-sky-200 rounded-xl p-4 mb-4 space-y-3">
+                            <label class="block text-xs font-bold text-deped-navy uppercase tracking-wider flex items-center space-x-1">
+                                <i data-lucide="sliders" class="w-4 h-4"></i>
+                                <span>Seminar / Meeting Logistics Requirement Toggles:</span>
+                            </label>
+                            <p class="text-xs text-slate-600">Toggle ON only the categories required for this seminar/meeting. Unchecked categories will be excluded from the budget.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 pt-1">
+                                <label class="flex items-center space-x-2 bg-white p-3 border rounded-lg cursor-pointer shadow-sm">
+                                    <input type="checkbox" v-model="proposal.meetingToggles.hasFood" class="w-4 h-4 text-deped-blue rounded">
+                                    <span class="text-xs font-bold text-slate-800">Requires Food & Catering?</span>
+                                </label>
+                                <label class="flex items-center space-x-2 bg-white p-3 border rounded-lg cursor-pointer shadow-sm">
+                                    <input type="checkbox" v-model="proposal.meetingToggles.hasMaterials" class="w-4 h-4 text-deped-blue rounded">
+                                    <span class="text-xs font-bold text-slate-800">Requires Materials?</span>
+                                </label>
+                                <label class="flex items-center space-x-2 bg-white p-3 border rounded-lg cursor-pointer shadow-sm">
+                                    <input type="checkbox" v-model="proposal.meetingToggles.hasVenue" class="w-4 h-4 text-deped-blue rounded">
+                                    <span class="text-xs font-bold text-slate-800">Requires Venue / Lodging?</span>
+                                </label>
+                                <label class="flex items-center space-x-2 bg-white p-3 border rounded-lg cursor-pointer shadow-sm">
+                                    <input type="checkbox" v-model="proposal.meetingToggles.hasVan" class="w-4 h-4 text-deped-blue rounded">
+                                    <span class="text-xs font-bold text-slate-800">Requires Van Transport?</span>
+                                </label>
                             </div>
                         </div>
 
@@ -253,18 +289,17 @@
                                     <input v-model.number="proposal.paxNT" type="number" class="w-full text-xs p-2 border rounded">
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-semibold text-slate-600">Total Participants:</label>
+                                    <label class="block text-[11px] font-semibold text-slate-600">Total Attendees / Pax:</label>
                                     <input :value="participantPaxTotal" readonly type="number" class="w-full text-xs p-2 border rounded bg-slate-200 font-bold">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- SECTION 2: TRAINING MATERIALS & SUPPLIES (SPLIT BY PARTICIPANT VS PMT) -->
-                    <div>
-                        <h3 class="text-sm font-bold uppercase tracking-wider text-deped-blue bg-blue-50 p-2 rounded border-l-4 border-deped-blue mb-4">II. Training Materials & Supplies Itemization</h3>
+                    <!-- SECTION 2: MATERIALS & SUPPLIES ITEMIZATION -->
+                    <div v-if="isMaterialsEnabled">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-deped-blue bg-blue-50 p-2 rounded border-l-4 border-deped-blue mb-4">II. Materials & Supplies Itemization</h3>
                         
-                        <!-- Add Material Toolbar -->
                         <div class="grid grid-cols-1 md:grid-cols-5 gap-2 mb-4 bg-slate-50 p-3 rounded-lg border">
                             <div class="md:col-span-2">
                                 <label class="block text-[10px] text-slate-500 font-semibold mb-0.5">Preset / Item Name:</label>
@@ -284,27 +319,19 @@
                             <div>
                                 <label class="block text-[10px] text-slate-500 font-semibold mb-0.5">Allocation Tag:</label>
                                 <select v-model="newMaterialCategory" class="w-full text-xs p-2 border rounded bg-white font-semibold">
-                                    <option value="participant">Participant Kit (Capped)</option>
-                                    <option value="pmt">PMT Common / Secretariat</option>
+                                    <option value="participant">Participant Kit Supplies</option>
+                                    <option value="pmt">PMT / Secretariat Common Supplies</option>
                                 </select>
                             </div>
                         </div>
                         <button @click="addMaterial" class="mb-4 bg-deped-blue text-white text-xs font-bold rounded px-4 py-2 hover:bg-blue-900">+ Add Material Item</button>
 
-                        <!-- PART A: PARTICIPANT SUPPLIES TABLE -->
                         <div class="mb-6 border rounded-xl p-4 bg-slate-50/50 space-y-3">
                             <div class="flex justify-between items-center flex-wrap gap-2">
-                                <div>
-                                    <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wide flex items-center space-x-2">
-                                        <span>A. Participant Supplies Kit</span>
-                                        <span class="text-[10px] font-normal text-slate-500">(Monitored against DO 030, s. 2021 Cap)</span>
-                                    </h4>
-                                </div>
-                                <div class="text-right">
-                                    <span :class="[participantPerPaxRate > 250 ? 'bg-red-100 text-red-800 border-red-300' : 'bg-emerald-100 text-emerald-800 border-emerald-300', 'text-xs px-3 py-1 rounded-full font-bold border inline-block']">
-                                        Rate: ₱{{ participantPerPaxRate.toFixed(2) }} / pax (Max: ₱250.00)
-                                    </span>
-                                </div>
+                                <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wide">A. Participant Materials & Kits</h4>
+                                <span :class="[suppliesExceededWarning ? 'bg-red-100 text-red-800 border-red-300' : 'bg-emerald-100 text-emerald-800 border-emerald-300', 'text-xs px-3 py-1 rounded-full font-bold border inline-block']">
+                                    Rate: ₱{{ participantPerPaxRate.toFixed(2) }} / pax {{ proposal.activityType === 'training' ? '(Max: ₱250.00)' : '(Exempted)' }}
+                                </span>
                             </div>
 
                             <div class="overflow-x-auto">
@@ -315,42 +342,24 @@
                                             <th class="p-2 text-center">Qty</th>
                                             <th class="p-2 text-right">Unit Price (₱)</th>
                                             <th class="p-2 text-right">Subtotal (₱)</th>
-                                            <th class="p-2 text-center">Tag / Move</th>
                                             <th class="p-2 text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="(m, idx) in participantMaterials" :key="m.id" class="border-b">
+                                        <tr v-for="m in participantMaterials" :key="m.id" class="border-b">
                                             <td class="p-2 font-medium"><input v-model="m.name" type="text" class="w-full text-xs border rounded p-1"></td>
                                             <td class="p-2 text-center"><input v-model.number="m.qty" type="number" class="w-16 text-center border rounded p-1"></td>
                                             <td class="p-2 text-right"><input v-model.number="m.price" type="number" step="0.5" class="w-24 text-right border rounded p-1 font-semibold text-slate-800"></td>
                                             <td class="p-2 text-right font-bold text-deped-navy">₱{{ (m.qty * m.price).toFixed(2) }}</td>
-                                            <td class="p-2 text-center">
-                                                <button @click="m.category = 'pmt'" class="text-[10px] bg-slate-100 text-slate-700 px-2 py-1 rounded border hover:bg-slate-200 font-semibold">Move to PMT</button>
-                                            </td>
                                             <td class="p-2 text-center"><button @click="removeMaterialById(m.id)" class="text-red-500 font-bold hover:text-red-700">✕</button></td>
-                                        </tr>
-                                        <tr v-if="participantMaterials.length === 0">
-                                            <td colspan="6" class="p-3 text-center text-slate-400 italic">No participant supplies added yet.</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="text-right text-xs font-bold text-slate-700">Subtotal Participant Supplies: ₱{{ totalParticipantSupplies.toFixed(2) }}</div>
                         </div>
 
-                        <!-- PART B: PMT COMMON / SECRETARIAT SUPPLIES TABLE -->
                         <div class="border rounded-xl p-4 bg-slate-50/50 space-y-3">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wide flex items-center space-x-2">
-                                        <span>B. PMT Common Workshop & Secretariat Supplies</span>
-                                        <span class="text-[10px] font-normal text-slate-500">(Account Code: 50202010 — Excluded from Pax Cap)</span>
-                                    </h4>
-                                </div>
-                                <span class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded">Compliant PMT Overhead</span>
-                            </div>
-
+                            <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wide">B. PMT Common Workshop Supplies</h4>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left text-xs bg-white rounded-lg border border-slate-200">
                                     <thead class="bg-slate-100 border-b">
@@ -359,34 +368,25 @@
                                             <th class="p-2 text-center">Qty</th>
                                             <th class="p-2 text-right">Unit Price (₱)</th>
                                             <th class="p-2 text-right">Subtotal (₱)</th>
-                                            <th class="p-2 text-center">Tag / Move</th>
                                             <th class="p-2 text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="(m, idx) in pmtMaterials" :key="m.id" class="border-b">
+                                        <tr v-for="m in pmtMaterials" :key="m.id" class="border-b">
                                             <td class="p-2 font-medium"><input v-model="m.name" type="text" class="w-full text-xs border rounded p-1"></td>
                                             <td class="p-2 text-center"><input v-model.number="m.qty" type="number" class="w-16 text-center border rounded p-1"></td>
                                             <td class="p-2 text-right"><input v-model.number="m.price" type="number" step="0.5" class="w-24 text-right border rounded p-1 font-semibold text-slate-800"></td>
                                             <td class="p-2 text-right font-bold text-deped-navy">₱{{ (m.qty * m.price).toFixed(2) }}</td>
-                                            <td class="p-2 text-center">
-                                                <button @click="m.category = 'participant'" class="text-[10px] bg-slate-100 text-slate-700 px-2 py-1 rounded border hover:bg-slate-200 font-semibold">Move to Participant Kit</button>
-                                            </td>
                                             <td class="p-2 text-center"><button @click="removeMaterialById(m.id)" class="text-red-500 font-bold hover:text-red-700">✕</button></td>
-                                        </tr>
-                                        <tr v-if="pmtMaterials.length === 0">
-                                            <td colspan="6" class="p-3 text-center text-slate-400 italic">No PMT shared supplies added. Click above to add flipcharts, markers, certificate holders, etc.</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="text-right text-xs font-bold text-slate-700">Subtotal PMT Supplies: ₱{{ totalPMTSupplies.toFixed(2) }}</div>
                         </div>
-
                     </div>
 
                     <!-- SECTION 3: STANDALONE DAY 0 PRE-ACTIVITY LOGISTICS -->
-                    <div>
+                    <div v-if="isVenueEnabled || isFoodEnabled">
                         <h3 class="text-sm font-bold uppercase tracking-wider text-deped-blue bg-blue-50 p-2 rounded border-l-4 border-deped-blue mb-4">III. Standalone Day 0 / Pre-Activity Logistics</h3>
                         
                         <div class="p-4 border-l-4 border-sky-500 border rounded-xl bg-slate-50/50 space-y-4">
@@ -401,17 +401,17 @@
                                         <label class="block font-semibold mb-1">PMT Members on Day 0 (Pax):</label>
                                         <input v-model.number="proposal.day0.pmt" type="number" class="w-full p-2 border rounded">
                                     </div>
-                                    <div>
+                                    <div v-if="isVenueEnabled">
                                         <label class="block font-semibold mb-1">Day 0 Lodging Rate / Person (₱):</label>
                                         <input v-model.number="proposal.day0.lodgingRate" type="number" class="w-full p-2 border rounded">
                                     </div>
-                                    <div>
+                                    <div v-if="isVanEnabled">
                                         <label class="block font-semibold mb-1">Day 0 Van Rate / Van (₱):</label>
                                         <input v-model.number="proposal.day0.vanRate" type="number" class="w-full p-2 border rounded">
                                     </div>
                                 </div>
 
-                                <div class="bg-white p-3 border rounded-lg">
+                                <div v-if="isFoodEnabled" class="bg-white p-3 border rounded-lg">
                                     <label class="block font-bold text-xs mb-2">Day 0 Meals Included:</label>
                                     <div class="flex flex-wrap gap-3 text-xs">
                                         <label><input type="checkbox" v-model="proposal.day0.meals.breakfast"> Breakfast (₱150)</label>
@@ -421,26 +421,14 @@
                                         <label><input type="checkbox" v-model="proposal.day0.meals.dinner"> Dinner (₱350)</label>
                                     </div>
                                 </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                                    <label class="flex items-center space-x-2"><input type="checkbox" v-model="proposal.day0.lodging"> Board & Lodging Required</label>
-                                    <label class="flex items-center space-x-2"><input type="checkbox" v-model="proposal.day0.van"> Van Service Required</label>
-                                    <div>
-                                        <label class="block font-semibold mb-1">Van Trip Type:</label>
-                                        <select v-model.number="proposal.day0.vanTrips" class="w-full p-2 border rounded">
-                                            <option :value="1">One-Way (1 Trip)</option>
-                                            <option :value="2">Round Trip (2 Trips)</option>
-                                        </select>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- SECTION 4: VENUE SCHEDULES & LOGISTICS -->
-                    <div>
+                    <!-- SECTION 4: VENUE & MEAL SCHEDULES -->
+                    <div v-if="isVenueEnabled || isFoodEnabled">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-sm font-bold uppercase tracking-wider text-deped-blue bg-blue-50 p-2 rounded border-l-4 border-deped-blue flex-1">IV. Venue Schedules & Logistics</h3>
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-deped-blue bg-blue-50 p-2 rounded border-l-4 border-deped-blue flex-1">IV. Venue & Catering Schedules</h3>
                             <button @click="addVenue" class="ml-3 bg-sky-600 text-white text-xs px-3 py-2 rounded font-bold">+ Add Venue</button>
                         </div>
 
@@ -466,20 +454,18 @@
                                     </div>
                                 </div>
 
-                                <div class="p-3 bg-slate-50 border rounded-lg text-xs space-y-2">
+                                <div v-if="isVenueEnabled" class="p-3 bg-slate-50 border rounded-lg text-xs space-y-2">
                                     <label class="flex items-center space-x-2 font-bold">
                                         <input type="checkbox" v-model="v.hasLodging">
                                         <span>Requires Board & Lodging at this venue?</span>
                                     </label>
-                                    <div v-if="v.hasLodging" class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                                        <div>
-                                            <label class="block font-semibold mb-1">Board & Lodging Rate / Person / Day (₱):</label>
-                                            <input v-model.number="v.lodgingRate" type="number" class="w-full p-2 border rounded bg-white">
-                                        </div>
+                                    <div v-if="v.hasLodging" class="pt-2">
+                                        <label class="block font-semibold mb-1">Board & Lodging Rate / Person / Day (₱):</label>
+                                        <input v-model.number="v.lodgingRate" type="number" class="w-full p-2 border rounded bg-white">
                                     </div>
                                 </div>
 
-                                <div class="p-3 bg-slate-50 border rounded-lg text-xs space-y-2">
+                                <div v-if="isFoodEnabled" class="p-3 bg-slate-50 border rounded-lg text-xs space-y-2">
                                     <label class="block font-bold">Meals Included at Venue:</label>
                                     <div class="flex flex-wrap gap-3">
                                         <label><input type="checkbox" v-model="v.meals.breakfast"> Breakfast (₱150)</label>
@@ -490,9 +476,9 @@
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                                <div v-if="isVanEnabled" class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs border-t pt-3">
                                     <div>
-                                        <label class="block font-semibold mb-1">Van Rental Rate / Van / Trip (₱):</label>
+                                        <label class="block font-semibold mb-1">Van Rental Rate / Trip (₱):</label>
                                         <input v-model.number="v.vanRate" type="number" class="w-full p-2 border rounded">
                                     </div>
                                     <div>
@@ -501,10 +487,6 @@
                                             <option :value="1">One-Way (1 Trip)</option>
                                             <option :value="2">Round Trip (2 Trips)</option>
                                         </select>
-                                    </div>
-                                    <div>
-                                        <label class="block font-semibold mb-1">Vans Needed (Max 10 Pax/Van):</label>
-                                        <input :value="Math.ceil((participantPaxTotal + v.pmt) / 10) + ' Vans Needed'" readonly class="w-full p-2 border rounded bg-slate-100 font-bold">
                                     </div>
                                 </div>
                             </div>
@@ -526,21 +508,24 @@
                         </div>
                     </div>
 
-                    <!-- SECTION 6: OBJECTIVES & OUTCOMES -->
-                    <div>
-                        <h3 class="text-sm font-bold uppercase tracking-wider text-deped-blue bg-blue-50 p-2 rounded border-l-4 border-deped-blue mb-4">VI. Objectives & Expected Outcomes</h3>
-                        <div class="space-y-3">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Activity Objective:</label>
-                                <textarea v-model="proposal.objective" rows="2" class="w-full text-xs p-2 border rounded"></textarea>
+                    <!-- CATEGORY SUMMARY MATRIX -->
+                    <div class="bg-amber-50/60 border border-amber-200 rounded-xl p-5 space-y-4">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center space-x-2">
+                            <i data-lucide="pie-chart" class="w-5 h-5 text-amber-600"></i>
+                            <span>COA Category Cost Summary Matrix</span>
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                            <div v-if="isFoodEnabled" class="bg-white p-3 rounded-lg border shadow-sm">
+                                <span class="text-slate-500 font-semibold uppercase block mb-1">Food & Catering Subtotal</span>
+                                <span class="text-base font-bold text-slate-900">₱{{ categoryTotals.food.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</span>
                             </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Expected Outputs:</label>
-                                <textarea v-model="proposal.outputs" rows="2" class="w-full text-xs p-2 border rounded"></textarea>
+                            <div v-if="isVanEnabled" class="bg-white p-3 rounded-lg border shadow-sm">
+                                <span class="text-slate-500 font-semibold uppercase block mb-1">Van & Transport Subtotal</span>
+                                <span class="text-base font-bold text-slate-900">₱{{ categoryTotals.van.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</span>
                             </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Expected Outcomes:</label>
-                                <textarea v-model="proposal.outcomes" rows="2" class="w-full text-xs p-2 border rounded"></textarea>
+                            <div v-if="isMaterialsEnabled" class="bg-white p-3 rounded-lg border shadow-sm border-deped-blue">
+                                <span class="text-deped-blue font-semibold uppercase block mb-1">Materials & Supplies Total</span>
+                                <span class="text-base font-bold text-deped-navy">₱{{ categoryTotals.materials.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</span>
                             </div>
                         </div>
                     </div>
@@ -578,23 +563,14 @@
                             <span class="text-slate-300">Approved Fund Allocation:</span>
                             <span class="font-bold text-white tracking-wide">₱{{ (proposal.fund || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}</span>
                         </div>
-
                         <div class="flex justify-between items-center py-2 border-b border-slate-800">
                             <span class="text-sky-400 font-extrabold text-lg md:text-xl uppercase tracking-wider">GRAND TOTAL BUDGET REQUIRED:</span>
                             <span class="text-sky-400 font-extrabold text-2xl md:text-3xl tracking-wide">₱{{ grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}</span>
                         </div>
-
                         <div class="flex justify-between items-center text-sm md:text-base pt-1">
                             <span class="text-slate-300">Remaining Fund Balance:</span>
                             <span :class="[remainingFundBalance < 0 ? 'text-[#f87171]' : 'text-emerald-400', 'font-bold tracking-wide']">
                                 ₱{{ remainingFundBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}
-                            </span>
-                        </div>
-
-                        <div class="flex justify-between items-center text-sm md:text-base pt-1">
-                            <span class="text-slate-300">Budget Utilization Rate:</span>
-                            <span :class="[budgetUtilizationRate > 100 ? 'text-[#f87171]' : 'text-emerald-400', 'font-bold tracking-wide']">
-                                {{ budgetUtilizationRate.toFixed(2) }}%
                             </span>
                         </div>
                     </div>
@@ -606,46 +582,23 @@
             <div v-show="activeTab === 'scoping'" class="space-y-6">
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                     <div class="flex justify-between items-center border-b pb-4 mb-6">
-                        <div>
-                            <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
-                                <i data-lucide="search" class="w-6 h-6 text-deped-blue"></i>
-                                <span>Automated Market Scoping & ABC Generator</span>
-                            </h2>
-                            <p class="text-xs text-slate-500">Under GPPB guidelines and COA rules, collect 3 price sources to establish a realistic Approved Budget for the Contract (ABC).</p>
-                        </div>
-                        <button @click="addScopingItem" class="bg-deped-blue text-white px-3 py-1.5 rounded text-xs font-semibold flex items-center space-x-1">
-                            <i data-lucide="plus" class="w-4 h-4"></i>
-                            <span>Add Item to Scope</span>
-                        </button>
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
+                            <i data-lucide="search" class="w-6 h-6 text-deped-blue"></i>
+                            <span>Automated Market Scoping & ABC Generator</span>
+                        </h2>
+                        <button @click="addScopingItem" class="bg-deped-blue text-white px-3 py-1.5 rounded text-xs font-semibold">+ Add Item</button>
                     </div>
-
                     <div class="space-y-6">
-                        <div v-for="(scope, sIdx) in marketScoping" :key="sIdx" class="border border-slate-200 rounded-xl p-5 bg-slate-50 space-y-4">
-                            <div class="flex justify-between items-center flex-wrap gap-2">
-                                <div class="flex items-center space-x-2">
-                                    <span class="w-6 h-6 rounded-full bg-deped-blue text-white font-bold text-xs flex items-center justify-center">{{ sIdx + 1 }}</span>
-                                    <input v-model="scope.itemName" type="text" placeholder="Item Name" class="font-bold text-slate-800 text-sm border-b border-slate-300 bg-transparent focus:outline-none p-1 w-64">
-                                </div>
-                                <div class="flex items-center space-x-3 text-xs">
-                                    <span class="text-slate-500">Average: <strong>₱{{ calculateScopeAverage(scope).toFixed(2) }}</strong></span>
-                                    <span class="text-emerald-700 font-bold bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
-                                        Recommended ABC (+10% Buffer): ₱{{ calculateRecommendedABC(scope).toFixed(2) }}
-                                    </span>
-                                    <button @click="removeScopingItem(sIdx)" class="text-red-500 hover:text-red-700"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                </div>
+                        <div v-for="(scope, sIdx) in marketScoping" :key="sIdx" class="border rounded-xl p-5 bg-slate-50 space-y-4">
+                            <div class="flex justify-between items-center">
+                                <input v-model="scope.itemName" type="text" class="font-bold text-sm border-b bg-transparent p-1 w-64">
+                                <span class="text-emerald-700 font-bold bg-emerald-50 px-2 py-1 rounded border">Recommended ABC: ₱{{ calculateRecommendedABC(scope).toFixed(2) }}</span>
                             </div>
-
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div v-for="(source, srcIdx) in scope.sources" :key="srcIdx" class="bg-white p-3 rounded-lg border border-slate-200 space-y-2">
-                                    <span class="text-xs font-bold text-slate-500 uppercase">Source {{ srcIdx + 1 }}</span>
-                                    <div>
-                                        <label class="block text-[10px] text-slate-500">Supplier Name / Platform:</label>
-                                        <input v-model="source.name" type="text" class="w-full text-xs p-1 border rounded">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[10px] text-slate-500">Quoted Unit Price (₱):</label>
-                                        <input v-model.number="source.price" type="number" step="0.01" class="w-full text-xs p-1 border rounded font-semibold text-slate-800">
-                                    </div>
+                                <div v-for="(source, srcIdx) in scope.sources" :key="srcIdx" class="bg-white p-3 rounded-lg border space-y-2">
+                                    <label class="block text-[10px] text-slate-500">Supplier & Price:</label>
+                                    <input v-model="source.name" type="text" class="w-full text-xs p-1 border rounded mb-1">
+                                    <input v-model.number="source.price" type="number" class="w-full text-xs p-1 border rounded font-semibold">
                                 </div>
                             </div>
                         </div>
@@ -656,64 +609,22 @@
             <!-- TAB 4: PRIME-ESG REPORTING -->
             <div v-show="activeTab === 'prime'" class="space-y-6">
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                    <div class="flex justify-between items-center border-b pb-4 mb-6">
-                        <div>
-                            <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
-                                <i data-lucide="bar-chart-3" class="w-6 h-6 text-deped-blue"></i>
-                                <span>PRIME-ESG Learning & Development Summary Report</span>
-                            </h2>
-                            <p class="text-xs text-slate-500">Consolidated L&D statistics across saved proposals for CSC PRIME-HRM audit submission.</p>
-                        </div>
-                        <button @click="exportPRIMEData" class="bg-emerald-600 text-white px-3 py-1.5 rounded text-xs font-semibold flex items-center space-x-1 hover:bg-emerald-700">
-                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
-                            <span>Export PRIME Summary (.xlsx)</span>
-                        </button>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-slate-50 p-4 rounded-xl border text-center">
-                            <p class="text-xs text-slate-500 uppercase font-semibold">Total Trainings</p>
-                            <p class="text-2xl font-bold text-slate-800">{{ savedProposals.length }}</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-xl border text-center">
-                            <p class="text-xs text-slate-500 uppercase font-semibold">Beneficiaries Reached</p>
-                            <p class="text-2xl font-bold text-slate-800">{{ primeStats.totalPax }} Pax</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-xl border text-center">
-                            <p class="text-xs text-slate-500 uppercase font-semibold">Total PMT Deployed</p>
-                            <p class="text-2xl font-bold text-slate-800">{{ primeStats.totalPMT }} Staff</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-xl border text-center">
-                            <p class="text-xs text-slate-500 uppercase font-semibold">Total L&D Budget Investment</p>
-                            <p class="text-2xl font-bold text-deped-blue">₱{{ primeStats.totalCost.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</p>
-                        </div>
-                    </div>
-
+                    <h2 class="text-xl font-bold text-slate-800 mb-4">PRIME-ESG Learning & Development Summary Report</h2>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs border-collapse">
                             <thead>
                                 <tr class="bg-slate-100 border-b text-slate-600">
-                                    <th class="p-2.5">Training Title</th>
-                                    <th class="p-2.5">Date</th>
-                                    <th class="p-2.5 text-center">Teaching</th>
-                                    <th class="p-2.5 text-center">RT</th>
-                                    <th class="p-2.5 text-center">SA</th>
-                                    <th class="p-2.5 text-center">NT</th>
-                                    <th class="p-2.5 text-center">PMT</th>
+                                    <th class="p-2.5">Activity Title</th>
+                                    <th class="p-2.5">Nature</th>
                                     <th class="p-2.5 text-center">Total Pax</th>
                                     <th class="p-2.5 text-right">Total Investment</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-100">
+                            <tbody>
                                 <tr v-for="p in savedProposals" :key="p.id">
                                     <td class="p-2.5 font-bold">{{ p.title }}</td>
-                                    <td class="p-2.5">{{ p.date }}</td>
-                                    <td class="p-2.5 text-center">{{ p.paxTeaching }}</td>
-                                    <td class="p-2.5 text-center">{{ p.paxRT }}</td>
-                                    <td class="p-2.5 text-center">{{ p.paxSA }}</td>
-                                    <td class="p-2.5 text-center">{{ p.paxNT }}</td>
-                                    <td class="p-2.5 text-center">{{ p.paxPMT }}</td>
-                                    <td class="p-2.5 text-center font-bold">{{ p.totalPax }}</td>
+                                    <td class="p-2.5">{{ p.activityType }}</td>
+                                    <td class="p-2.5 text-center">{{ p.totalPax }}</td>
                                     <td class="p-2.5 text-right font-bold text-deped-blue">₱{{ p.grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</td>
                                 </tr>
                             </tbody>
@@ -722,123 +633,38 @@
                 </div>
             </div>
 
-            <!-- TAB 5: PRINT & DOCUMENT PREVIEW -->
+            <!-- TAB 5: PRINT PREVIEW -->
             <div v-show="activeTab === 'preview'" class="space-y-6">
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                    <div class="flex justify-between items-center border-b pb-4 mb-6 flex-wrap gap-2">
-                        <div>
-                            <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
-                                <i data-lucide="printer" class="w-6 h-6 text-deped-blue"></i>
-                                <span>Official Document & ActProp Preview</span>
-                            </h2>
-                            <p class="text-xs text-slate-500">Matches official layout: <code>ActProp_DMOS_2026June1.docx</code></p>
-                        </div>
-                        <button @click="triggerPrint" class="bg-deped-blue text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-900 flex items-center space-x-1 shadow">
-                            <i data-lucide="printer" class="w-4 h-4"></i>
-                            <span>Print Document</span>
-                        </button>
+                    <div class="flex justify-between items-center border-b pb-4 mb-6">
+                        <h2 class="text-xl font-bold text-slate-800">Official Document Preview</h2>
+                        <button @click="triggerPrint" class="bg-deped-blue text-white px-4 py-2 rounded-lg text-xs font-bold">Print Document</button>
                     </div>
-
-                    <!-- PRINTABLE PAPER CANVAS -->
-                    <div id="printable-document" class="bg-white p-8 md:p-12 rounded border border-slate-300 shadow-inner max-w-4xl mx-auto text-slate-900 font-sans text-xs leading-relaxed space-y-6">
-                        <div class="text-center space-y-1 border-b-2 border-slate-800 pb-4">
-                            <p class="font-bold text-sm tracking-widest uppercase">Republic of the Philippines</p>
-                            <p class="font-bold text-base text-deped-navy uppercase">Department of Education</p>
-                            <p class="text-xs italic">Region / Schools Division Office of Laguna</p>
-                            <h1 class="font-extrabold text-base pt-2 text-slate-900 uppercase tracking-wide">ACTIVITY PROPOSAL</h1>
+                    <div id="printable-document" class="bg-white p-8 rounded border shadow-inner max-w-4xl mx-auto text-slate-900 text-xs space-y-4">
+                        <div class="text-center font-bold uppercase">
+                            <p>Republic of the Philippines &bull; Department of Education</p>
+                            <h1 class="text-sm pt-1">ACTIVITY PROPOSAL</h1>
                         </div>
-
-                        <table class="w-full text-left border-collapse border border-slate-300">
-                            <tr>
-                                <td class="border border-slate-300 p-2 font-bold w-1/3">Title</td>
-                                <td class="border border-slate-300 p-2">{{ proposal.title }}</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-slate-300 p-2 font-bold">Date / Venue</td>
-                                <td class="border border-slate-300 p-2">{{ proposal.date }} / {{ proposal.venues[0]?.name }}</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-slate-300 p-2 font-bold">No. of Participants</td>
-                                <td class="border border-slate-300 p-2">
-                                    Teaching: {{ proposal.paxTeaching }} | RT: {{ proposal.paxRT }} | SA: {{ proposal.paxSA }} | NT: {{ proposal.paxNT }} | PMT: {{ proposal.paxPMT }}
-                                    <br><strong>Total: {{ totalPax }} Pax</strong>
-                                </td>
+                        <table class="w-full border-collapse border border-slate-300">
+                            <tr><td class="border p-2 font-bold w-1/3">Title</td><td class="border p-2">{{ proposal.title }}</td></tr>
+                            <tr><td class="border p-2 font-bold">Nature</td><td class="border p-2">{{ proposal.activityType }}</td></tr>
+                        </table>
+                        <table class="w-full border-collapse border border-slate-300">
+                            <tr class="bg-slate-100"><th class="border p-2">Category</th><th class="border p-2 text-right">Cost</th></tr>
+                            <tr v-for="item in calculatedBreakdown" :key="item.desc">
+                                <td class="border p-2">{{ item.desc }}</td>
+                                <td class="border p-2 text-right font-bold">₱{{ item.total.toFixed(2) }}</td>
                             </tr>
                         </table>
-
-                        <p class="font-bold text-xs uppercase text-deped-navy">Estimated Budget Summary</p>
-                        <table class="w-full text-left border-collapse border border-slate-300">
-                            <thead class="bg-slate-100">
-                                <tr>
-                                    <th class="border border-slate-300 p-2">Particulars</th>
-                                    <th class="border border-slate-300 p-2 text-center">No. of Pax</th>
-                                    <th class="border border-slate-300 p-2 text-center">No. of Days</th>
-                                    <th class="border border-slate-300 p-2 text-right">Total Estimated Cost</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="border border-slate-300 p-2">Food & Boarding</td>
-                                    <td class="border border-slate-300 p-2 text-center">{{ totalPax }}</td>
-                                    <td class="border border-slate-300 p-2 text-center">{{ maxVenueDays }}</td>
-                                    <td class="border border-slate-300 p-2 text-right font-bold">₱{{ totalFoodCost.toFixed(2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="border border-slate-300 p-2">Participant Supplies (DO 030 s. 2021)</td>
-                                    <td class="border border-slate-300 p-2 text-center">{{ participantPaxTotal }}</td>
-                                    <td class="border border-slate-300 p-2 text-center">1</td>
-                                    <td class="border border-slate-300 p-2 text-right font-bold">₱{{ totalParticipantSupplies.toFixed(2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="border border-slate-300 p-2">PMT Common Workshop Supplies</td>
-                                    <td class="border border-slate-300 p-2 text-center">PMT / Shared</td>
-                                    <td class="border border-slate-300 p-2 text-center">1</td>
-                                    <td class="border border-slate-300 p-2 text-right font-bold">₱{{ totalPMTSupplies.toFixed(2) }}</td>
-                                </tr>
-                                <tr class="bg-slate-50 font-extrabold">
-                                    <td colspan="3" class="border border-slate-300 p-2">GRAND TOTAL</td>
-                                    <td class="border border-slate-300 p-2 text-right text-deped-navy">₱{{ grandTotal.toFixed(2) }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                        <div class="pt-6 border-t-2 border-slate-300">
-                            <p class="font-bold text-xs uppercase mb-4">SIGN-OFF & APPROVAL MATRIX</p>
-                            <div class="grid grid-cols-2 gap-8 text-xs">
-                                <div>
-                                    <p class="text-slate-500">Prepared by:</p>
-                                    <div class="mt-6 border-b border-slate-800 font-bold">ENRICO G. ORTEGA</div>
-                                    <p class="text-[10px] text-slate-500">SEPS–HRD Section</p>
-                                </div>
-                                <div>
-                                    <p class="text-slate-500">Reviewed by:</p>
-                                    <div class="mt-6 border-b border-slate-800 font-bold">DARWIN S. TALAMBAYAN EdD</div>
-                                    <p class="text-[10px] text-slate-500">Chief, SGOD</p>
-                                </div>
-                                <div>
-                                    <p class="text-slate-500">Recommending Approval:</p>
-                                    <div class="mt-6 border-b border-slate-800 font-bold">BUDDY CHESTER M. REPIA, CESO VI</div>
-                                    <p class="text-[10px] text-slate-500">Assistant Schools Division Superintendent</p>
-                                </div>
-                                <div>
-                                    <p class="text-slate-500">Approved:</p>
-                                    <div class="mt-6 border-b border-slate-800 font-bold">SUSAN DL. ORIBIANA CESO V</div>
-                                    <p class="text-[10px] text-slate-500">Schools Division Superintendent</p>
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
             </div>
 
         </main>
 
-        <!-- FOOTER -->
         <footer class="bg-slate-800 text-slate-400 py-4 border-t border-slate-700 text-xs text-center no-print">
-            <p>Human Resource Development Section &bull; Schools Division Office of Laguna</p>
+            <p>DepEd-COA TPMS & HRD Training Budget System &bull; Schools Division Office of Laguna</p>
         </footer>
-
     </div>
 
     <script>
@@ -861,115 +687,51 @@
                     newMaterialQty: null,
                     newMaterialCategory: 'participant',
                     presetCatalog: {
-                        "Ballpen": 10,
-                        "Notebook": 25,
-                        "Folder": 20,
-                        "Clipboard": 150,
-                        "Yellow Pad": 40,
-                        "Bond Paper (Ream)": 300,
-                        "Marker": 50,
-                        "Permanent Marker": 60,
-                        "Manila Paper": 20,
-                        "Meta Cards": 100,
-                        "Name Tag with Lace": 35,
-                        "ID Holder": 25,
-                        "Eco Bag / Tote Bag": 130,
-                        "Training Bag": 300,
-                        "Journal Notebook": 120,
-                        "USB Flash Drive": 350,
-                        "Certificate Folder": 50,
-                        "Alcohol (500ml)": 120,
-                        "Face Mask": 5,
-                        "Tissue": 50,
-                        "Wet Wipes": 80,
-                        "First Aid Kit": 1200,
-                        "Band-Aid Box": 80,
-                        "ORS Sachet": 15,
-                        "Tarpaulin Backdrop": 1500,
-                        "Certificates": 10,
-                        "Certificate Paper": 8,
-                        "Photocopying": 2,
-                        "Printing Colored": 15,
-                        "Printing Black & White": 2,
-                        "Printer Ink": 800,
-                        "Stapler": 150,
-                        "Staple Wire": 30,
-                        "Tape": 50,
-                        "Scissors": 100,
-                        "Extension Cord": 500,
-                        "Battery Pack": 250,
-                        "Projector Rental": 2500,
-                        "Sound System Rental": 3000,
-                        "Laptop Rental": 1000,
-                        "Wireless Microphone Rental": 800,
-                        "LED Screen Rental": 10000,
-                        "WiFi Rental": 1500,
-                        "Generator Rental": 5000,
-                        "Van Rental": 6500,
-                        "Bus Rental": 18000,
-                        "Fuel Allowance": 3000,
-                        "Toll Fee": 500,
-                        "Parking Fee": 300
+                        "Ballpen": 10, "Notebook": 25, "Folder": 20, "Tote Bag": 130, "Printer Ink": 800
                     },
                     proposal: {
-                        title: 'NonTeaching CapB',
-                        fund: 500000,
-                        date: 'June 1-3, 2026',
-                        fundSource: 'Approved HRD Fund Allocation',
-                        paxTeaching: 20,
-                        paxRT: 10,
-                        paxSA: 10,
-                        paxNT: 10,
-                        paxPMT: 10,
-                        objective: 'Enhance administrative and technical efficiency across SDO Laguna offices.',
-                        outputs: 'Training completion reports and participant certificates.',
-                        outcomes: 'Improved compliance and standardized office procedures.',
+                        title: 'SDO Consultation Meeting',
+                        activityType: 'seminar_meeting',
+                        meetingToggles: {
+                            hasFood: true,
+                            hasMaterials: false,
+                            hasVenue: false,
+                            hasVan: false
+                        },
+                        fund: 50000,
+                        date: 'June 10, 2026',
+                        fundSource: 'HRD Fund',
+                        paxTeaching: 15,
+                        paxRT: 5,
+                        paxSA: 5,
+                        paxNT: 5,
+                        paxPMT: 5,
                         medicine: 0,
                         contingency: 0,
-                        materials: [
-                            { id: 1, name: 'Notebook', qty: 50, price: 25, category: 'participant' },
-                            { id: 2, name: 'Ballpen', qty: 50, price: 10, category: 'participant' },
-                            { id: 3, name: 'Bond Paper Ream', qty: 2, price: 280, category: 'pmt' },
-                            { id: 4, name: 'Printer Ink', qty: 1, price: 1280, category: 'pmt' },
-                            { id: 5, name: 'Tote Bag', qty: 50, price: 130, category: 'participant' }
-                        ],
-                        day0: {
-                            enabled: false,
-                            pmt: 10,
-                            lodgingRate: 2000,
-                            vanRate: 6500,
-                            lodging: false,
-                            van: false,
-                            vanTrips: 1,
-                            meals: { breakfast: false, amSnack: false, lunch: false, pmSnack: false, dinner: false }
-                        },
+                        materials: [],
+                        day0: { enabled: false, pmt: 5, lodgingRate: 2000, vanRate: 6500, lodging: false, van: false, vanTrips: 1, meals: { breakfast: false, amSnack: true, lunch: true, pmSnack: true, dinner: false } },
                         venues: [
-                            {
-                                id: 1,
-                                name: 'SGOD Conference',
-                                days: 1,
-                                pmt: 0,
-                                hasLodging: false,
-                                lodgingRate: 0,
-                                vanRate: 0,
-                                vanTrips: 1,
-                                meals: { breakfast: true, amSnack: true, lunch: true, pmSnack: true, dinner: false }
-                            }
+                            { id: 1, name: 'SDO Conference Room', days: 1, pmt: 5, hasLodging: false, lodgingRate: 0, vanRate: 0, vanTrips: 1, meals: { breakfast: false, amSnack: true, lunch: true, pmSnack: true, dinner: false } }
                         ]
                     },
                     marketScoping: [
-                        {
-                            itemName: 'Training Notebooks & Kits',
-                            sources: [
-                                { name: 'Shopee Official Store', price: 25 },
-                                { name: 'Local Bookstore Quote', price: 30 },
-                                { name: 'Lazada Flagship', price: 28 }
-                            ]
-                        }
+                        { itemName: 'Catering Package', sources: [{ name: 'Supplier A', price: 500 }, { name: 'Supplier B', price: 550 }, { name: 'Supplier C', price: 480 }] }
                     ]
                 }
             },
             computed: {
+                isFoodEnabled() {
+                    return this.proposal.activityType === 'training' || this.proposal.meetingToggles.hasFood;
+                },
+                isMaterialsEnabled() {
+                    return this.proposal.activityType === 'training' || this.proposal.meetingToggles.hasMaterials;
+                },
+                isVenueEnabled() {
+                    return this.proposal.activityType === 'training' || this.proposal.meetingToggles.hasVenue;
+                },
+                isVanEnabled() {
+                    return this.proposal.activityType === 'training' || this.proposal.meetingToggles.hasVan;
+                },
                 participantPaxTotal() {
                     return (this.proposal.paxTeaching || 0) + (this.proposal.paxRT || 0) + (this.proposal.paxSA || 0) + (this.proposal.paxNT || 0);
                 },
@@ -983,95 +745,88 @@
                     return this.proposal.materials.filter(m => m.category === 'pmt');
                 },
                 totalParticipantSupplies() {
+                    if (!this.isMaterialsEnabled) return 0;
                     return this.participantMaterials.reduce((sum, m) => sum + (m.qty * m.price), 0);
                 },
                 totalPMTSupplies() {
+                    if (!this.isMaterialsEnabled) return 0;
                     return this.pmtMaterials.reduce((sum, m) => sum + (m.qty * m.price), 0);
-                },
-                totalMaterialsCost() {
-                    return this.totalParticipantSupplies + this.totalPMTSupplies;
-                },
-                maxVenueDays() {
-                    if (this.proposal.venues.length === 0) return 1;
-                    return Math.max(...this.proposal.venues.map(v => v.days || 1));
                 },
                 calculatedBreakdown() {
                     const items = [];
 
-                    // 1. Participant Materials
-                    this.participantMaterials.forEach(m => {
-                        const total = m.qty * m.price;
-                        if (total > 0) items.push({ desc: `Participant Supply: ${m.name}`, unit: 'Pcs', qty: m.qty, rate: m.price, total });
-                    });
+                    // 1. Materials
+                    if (this.isMaterialsEnabled) {
+                        this.participantMaterials.forEach(m => {
+                            const total = m.qty * m.price;
+                            if (total > 0) items.push({ type: 'material', desc: `Participant Supply: ${m.name}`, unit: 'Pcs', qty: m.qty, rate: m.price, total });
+                        });
+                        this.pmtMaterials.forEach(m => {
+                            const total = m.qty * m.price;
+                            if (total > 0) items.push({ type: 'material', desc: `PMT Supply: ${m.name}`, unit: 'Pcs', qty: m.qty, rate: m.price, total });
+                        });
+                    }
 
-                    // 2. PMT Materials
-                    this.pmtMaterials.forEach(m => {
-                        const total = m.qty * m.price;
-                        if (total > 0) items.push({ desc: `PMT Common Supply: ${m.name}`, unit: 'Pcs', qty: m.qty, rate: m.price, total });
-                    });
-
-                    // 3. Day 0 Calculations
+                    // 2. Day 0
                     if (this.proposal.day0.enabled) {
                         const d0Pmt = this.proposal.day0.pmt || 0;
-                        let d0MealRate = 0;
-                        if (this.proposal.day0.meals.breakfast) d0MealRate += 150;
-                        if (this.proposal.day0.meals.amSnack) d0MealRate += 100;
-                        if (this.proposal.day0.meals.lunch) d0MealRate += 350;
-                        if (this.proposal.day0.meals.pmSnack) d0MealRate += 100;
-                        if (this.proposal.day0.meals.dinner) d0MealRate += 350;
-
-                        if (d0MealRate > 0 && d0Pmt > 0) {
-                            items.push({ desc: 'Food Expense - Day 0 Setup', unit: 'Pax', qty: d0Pmt, rate: d0MealRate, total: d0MealRate * d0Pmt });
+                        if (this.isFoodEnabled) {
+                            let d0MealRate = 0;
+                            if (this.proposal.day0.meals.breakfast) d0MealRate += 150;
+                            if (this.proposal.day0.meals.amSnack) d0MealRate += 100;
+                            if (this.proposal.day0.meals.lunch) d0MealRate += 350;
+                            if (this.proposal.day0.meals.pmSnack) d0MealRate += 100;
+                            if (this.proposal.day0.meals.dinner) d0MealRate += 350;
+                            if (d0MealRate > 0 && d0Pmt > 0) {
+                                items.push({ type: 'food', desc: 'Food Expense - Day 0 Setup', unit: 'Pax', qty: d0Pmt, rate: d0MealRate, total: d0MealRate * d0Pmt });
+                            }
                         }
-
-                        if (this.proposal.day0.lodging && this.proposal.day0.lodgingRate > 0) {
-                            items.push({ desc: 'Day 0 Board & Lodging', unit: 'Pax', qty: d0Pmt, rate: this.proposal.day0.lodgingRate, total: d0Pmt * this.proposal.day0.lodgingRate });
-                        }
-
-                        if (this.proposal.day0.van && d0Pmt > 0) {
-                            const vans = Math.ceil(d0Pmt / 10);
-                            const total = vans * this.proposal.day0.vanRate * this.proposal.day0.vanTrips;
-                            items.push({ desc: `Day 0 Van Rental (${vans} Vans)`, unit: 'Vans', qty: vans * this.proposal.day0.vanTrips, rate: this.proposal.day0.vanRate, total });
+                        if (this.isVenueEnabled && this.proposal.day0.lodging && this.proposal.day0.lodgingRate > 0) {
+                            items.push({ type: 'lodging', desc: 'Day 0 Board & Lodging', unit: 'Pax', qty: d0Pmt, rate: this.proposal.day0.lodgingRate, total: d0Pmt * this.proposal.day0.lodgingRate });
                         }
                     }
 
-                    // 4. Venue Calculations
+                    // 3. Venues & Meals
                     this.proposal.venues.forEach((v) => {
                         const vPax = this.participantPaxTotal + (v.pmt || 0);
                         const days = v.days || 1;
 
-                        if (v.hasLodging && v.lodgingRate > 0) {
-                            const total = vPax * v.lodgingRate * days;
-                            items.push({ desc: `Board & Lodging - ${v.name} (${days} Days)`, unit: 'Pax', qty: vPax, rate: v.lodgingRate * days, total });
+                        if (this.isVenueEnabled && v.hasLodging && v.lodgingRate > 0) {
+                            items.push({ type: 'lodging', desc: `Board & Lodging - ${v.name} (${days} Days)`, unit: 'Pax', qty: vPax, rate: v.lodgingRate * days, total: vPax * v.lodgingRate * days });
                         }
 
-                        let mealRate = 0;
-                        if (v.meals.breakfast) mealRate += 150;
-                        if (v.meals.amSnack) mealRate += 100;
-                        if (v.meals.lunch) mealRate += 350;
-                        if (v.meals.pmSnack) mealRate += 100;
-                        if (v.meals.dinner) mealRate += 350;
+                        if (this.isFoodEnabled) {
+                            let mealRate = 0;
+                            if (v.meals.breakfast) mealRate += 150;
+                            if (v.meals.amSnack) mealRate += 100;
+                            if (v.meals.lunch) mealRate += 350;
+                            if (v.meals.pmSnack) mealRate += 100;
+                            if (v.meals.dinner) mealRate += 350;
 
-                        if (mealRate > 0) {
-                            const total = mealRate * vPax * days;
-                            items.push({ desc: `Food Expense - ${v.name} (${days} Days)`, unit: 'Pax', qty: vPax, rate: mealRate * days, total });
+                            if (mealRate > 0) {
+                                items.push({ type: 'food', desc: `Food Expense - ${v.name} (${days} Days)`, unit: 'Pax', qty: vPax, rate: mealRate * days, total: mealRate * vPax * days });
+                            }
                         }
 
-                        const vans = Math.ceil(vPax / 10);
-                        if (vans > 0 && v.vanRate > 0) {
-                            const total = vans * v.vanRate * (v.vanTrips || 1);
-                            items.push({ desc: `Van Rental - ${v.name} (${vans} Vans)`, unit: 'Vans', qty: vans * (v.vanTrips || 1), rate: v.vanRate, total });
+                        if (this.isVanEnabled && v.vanRate > 0) {
+                            const vans = Math.ceil(vPax / 10);
+                            items.push({ type: 'van', desc: `Van Rental - ${v.name}`, unit: 'Vans', qty: vans * (v.vanTrips || 1), rate: v.vanRate, total: vans * v.vanRate * (v.vanTrips || 1) });
                         }
                     });
 
-                    // 5. Medicine & Contingency
-                    if (this.proposal.medicine > 0) items.push({ desc: 'Medicine Allocation', unit: 'Lot', qty: 1, rate: this.proposal.medicine, total: this.proposal.medicine });
-                    if (this.proposal.contingency > 0) items.push({ desc: 'Contingency Allocation', unit: 'Lot', qty: 1, rate: this.proposal.contingency, total: this.proposal.contingency });
+                    if (this.proposal.medicine > 0) items.push({ type: 'other', desc: 'Medicine Allocation', unit: 'Lot', qty: 1, rate: this.proposal.medicine, total: this.proposal.medicine });
+                    if (this.proposal.contingency > 0) items.push({ type: 'other', desc: 'Contingency Allocation', unit: 'Lot', qty: 1, rate: this.proposal.contingency, total: this.proposal.contingency });
 
                     return items;
                 },
-                totalFoodCost() {
-                    return this.calculatedBreakdown.filter(i => i.desc.includes('Food Expense') || i.desc.includes('Day 0 Food')).reduce((sum, i) => sum + i.total, 0);
+                categoryTotals() {
+                    const totals = { food: 0, van: 0, materials: 0 };
+                    this.calculatedBreakdown.forEach(i => {
+                        if (i.type === 'food') totals.food += i.total;
+                        else if (i.type === 'van') totals.van += i.total;
+                        else if (i.type === 'material') totals.materials += i.total;
+                    });
+                    return totals;
                 },
                 grandTotal() {
                     return this.calculatedBreakdown.reduce((sum, i) => sum + i.total, 0);
@@ -1083,29 +838,15 @@
                     if (!this.proposal.fund || this.proposal.fund <= 0) return 0;
                     return (this.grandTotal / this.proposal.fund) * 100;
                 },
-                fundUtilization() {
-                    return this.budgetUtilizationRate;
-                },
+                fundUtilization() { return this.budgetUtilizationRate; },
                 participantPerPaxRate() {
                     return this.totalParticipantSupplies / (this.participantPaxTotal || 1);
                 },
                 suppliesExceededWarning() {
-                    return this.participantPerPaxRate > 250;
+                    return this.isMaterialsEnabled && this.proposal.activityType === 'training' && this.participantPerPaxRate > 250;
                 },
                 auditHealthScore() {
-                    let score = 100;
-                    if (this.participantPerPaxRate > 250) score -= 30;
-                    if (this.marketScoping.length === 0) score -= 20;
-                    return score;
-                },
-                primeStats() {
-                    let totalPax = 0, totalPMT = 0, totalCost = 0;
-                    this.savedProposals.forEach(p => {
-                        totalPax += p.totalPax;
-                        totalPMT += p.paxPMT;
-                        totalCost += p.grandTotal;
-                    });
-                    return { totalPax, totalPMT, totalCost };
+                    return this.suppliesExceededWarning ? 70 : 100;
                 }
             },
             methods: {
@@ -1133,64 +874,33 @@
                 },
                 addVenue() {
                     this.proposal.venues.push({
-                        id: Date.now(),
-                        name: 'SDO Laguna Facility',
-                        days: 1,
-                        pmt: this.proposal.paxPMT || 10,
-                        hasLodging: false,
-                        lodgingRate: 2000,
-                        vanRate: 6500,
-                        vanTrips: 2,
-                        meals: { breakfast: false, amSnack: true, lunch: true, pmSnack: true, dinner: false }
+                        id: Date.now(), name: 'Additional Facility', days: 1, pmt: this.proposal.paxPMT || 5, hasLodging: false, lodgingRate: 2000, vanRate: 6500, vanTrips: 1, meals: { breakfast: false, amSnack: true, lunch: true, pmSnack: true, dinner: false }
                     });
                 },
-                removeVenue(index) {
-                    this.proposal.venues.splice(index, 1);
-                },
+                removeVenue(index) { this.proposal.venues.splice(index, 1); },
                 updateAllVenuePMTs() {
                     const globalPmt = this.proposal.paxPMT || 0;
                     this.proposal.day0.pmt = globalPmt;
                     this.proposal.venues.forEach(v => { v.pmt = globalPmt; });
                 },
                 addScopingItem() {
-                    this.marketScoping.push({
-                        itemName: 'New Item',
-                        sources: [
-                            { name: 'Shopee', price: 0 },
-                            { name: 'Lazada', price: 0 },
-                            { name: 'Local Supplier', price: 0 }
-                        ]
-                    });
-                },
-                removeScopingItem(index) {
-                    this.marketScoping.splice(index, 1);
-                },
-                calculateScopeAverage(scope) {
-                    const validPrices = scope.sources.map(s => s.price).filter(p => p > 0);
-                    if (validPrices.length === 0) return 0;
-                    return validPrices.reduce((a, b) => a + b, 0) / validPrices.length;
+                    this.marketScoping.push({ itemName: 'New Item', sources: [{ name: 'Supplier 1', price: 0 }, { name: 'Supplier 2', price: 0 }, { name: 'Supplier 3', price: 0 }] });
                 },
                 calculateRecommendedABC(scope) {
-                    return this.calculateScopeAverage(scope) * 1.10;
+                    const prices = scope.sources.map(s => s.price).filter(p => p > 0);
+                    if (prices.length === 0) return 0;
+                    return (prices.reduce((a, b) => a + b, 0) / prices.length) * 1.10;
                 },
                 saveProposal() {
-                    const id = Date.now().toString();
-                    const record = {
-                        id: id,
+                    this.savedProposals.push({
+                        id: Date.now().toString(),
                         title: this.proposal.title,
-                        date: this.proposal.date,
-                        fund: this.proposal.fund,
-                        paxTeaching: this.proposal.paxTeaching,
-                        paxRT: this.proposal.paxRT,
-                        paxSA: this.proposal.paxSA,
-                        paxNT: this.proposal.paxNT,
-                        paxPMT: this.proposal.paxPMT,
+                        activityType: this.proposal.activityType,
                         totalPax: this.totalPax,
                         grandTotal: this.grandTotal
-                    };
-                    this.savedProposals.push(record);
+                    });
                     localStorage.setItem('deped_hrd_proposals', JSON.stringify(this.savedProposals));
-                    alert('Proposal saved to local workspace storage!');
+                    alert('Proposal saved successfully!');
                 },
                 deleteProposal(id) {
                     this.savedProposals = this.savedProposals.filter(p => p.id !== id);
@@ -1198,44 +908,17 @@
                 },
                 exportDetailedExcel() {
                     const wsData = [
-                        ["DEPARTMENT OF EDUCATION - SCHOOLS DIVISION OFFICE OF LAGUNA"],
-                        ["HRD TRAINING BUDGET PLANNER & ITEMIZATION"],
+                        ["DEPED SDO LAGUNA - HRD BUDGET PLANNER"],
+                        ["Title:", this.proposal.title],
+                        ["Grand Total:", this.grandTotal],
                         [],
-                        ["Activity Title:", "", "", this.proposal.title],
-                        ["Participants (Pax):", "", "", this.participantPaxTotal],
-                        ["Approved Fund Allocation:", "", "", this.proposal.fund],
-                        [],
-                        ["Item Description", "Unit", "Quantity", "Unit Rate", "Total Amount"]
+                        ["Description", "Unit", "Qty", "Rate", "Total"]
                     ];
-
-                    this.calculatedBreakdown.forEach(item => {
-                        wsData.push([item.desc, item.unit, item.qty, item.rate, item.total]);
-                    });
-
-                    wsData.push([]);
-                    wsData.push(["GRAND TOTAL BUDGET REQUIRED", "", "", "", this.grandTotal]);
-                    wsData.push(["APPROVED FUND ALLOCATION", "", "", "", this.proposal.fund]);
-                    wsData.push(["REMAINING FUND BALANCE", "", "", "", this.remainingFundBalance]);
-
+                    this.calculatedBreakdown.forEach(i => wsData.push([i.desc, i.unit, i.qty, i.rate, i.total]));
                     const ws = XLSX.utils.aoa_to_sheet(wsData);
                     const wb = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(wb, ws, "Itemized HRD Budget");
-                    XLSX.writeFile(wb, `${(this.proposal.title || 'HRD_Proposal').replace(/[^a-zA-Z0-9]/g, "_")}_Detailed_Itemization.xlsx`);
-                },
-                exportPRIMEData() {
-                    const wsData = [
-                        ["DEPARTMENT OF EDUCATION - SCHOOLS DIVISION OFFICE OF LAGUNA"],
-                        ["PRIME-ESG LEARNING & DEVELOPMENT SUMMARY REPORT"],
-                        [],
-                        ["Title", "Date", "Teaching", "RT", "SA", "NT", "PMT", "Total Pax", "Total Investment"]
-                    ];
-                    this.savedProposals.forEach(p => {
-                        wsData.push([p.title, p.date, p.paxTeaching, p.paxRT, p.paxSA, p.paxNT, p.paxPMT, p.totalPax, p.grandTotal]);
-                    });
-                    const ws = XLSX.utils.aoa_to_sheet(wsData);
-                    const wb = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(wb, ws, "PRIME Summary");
-                    XLSX.writeFile(wb, "PRIME_ESG_LND_Summary_Report.xlsx");
+                    XLSX.utils.book_append_sheet(wb, ws, "Budget");
+                    XLSX.writeFile(wb, "HRD_Proposal.xlsx");
                 },
                 triggerPrint() { window.print(); }
             },
